@@ -1556,20 +1556,8 @@ header = html.Div(
 
 
 # Define a estrutura final do layout da aplicação.
-
+# REMOVIDO o html.Style daqui
 app.layout = html.Div([
-    # ADIÇÃO DE CSS PARA VALIDAÇÃO VISUAL
-    html.Style('''
-        .invalid-input {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-        }
-        .error-message p {
-            color: #dc3545;
-            font-size: 0.8rem;
-            margin-top: 4px;
-        }
-    '''),
     header,
     # O conteúdo da página será renderizado aqui.
     html.Div(id="content-div", style=MAIN_CONTENT_STYLE)
@@ -1782,11 +1770,7 @@ def update_verossimilhanca_dropdown(priori):
 
     else:
 
-        # Se nenhuma priori for selecionada, retorna listas vazias.
-
         return [], None
-
-    # Retorna a lista de opções e define a primeira opção como padrão.
 
     return options, options[0]
 
@@ -1902,19 +1886,11 @@ def render_priori_params(priori):
 
 def render_verossimilhanca_params(verossimilhanca):
 
-    """Renderiza os campos de input para os parâmetros da verossimilhança dinamicamente."""
-
     if verossimilhanca is None:
 
         raise exceptions.PreventUpdate
 
-
-    # Define um requisito mínimo para o tamanho da amostra.
-
     tamanho_min = 2 if verossimilhanca == "Normal (média e precisão desconhecidas)" else 1
-
-    # Define o input base para o tamanho da amostra 'n'.
-
     base_inputs = [
 
         html.Label(f"Tamanho amostral (n ≥ {tamanho_min}):"),
@@ -1923,16 +1899,11 @@ def render_verossimilhanca_params(verossimilhanca):
         html.Div(id='error-tamanho', className='error-message'),
     ]
 
-
-    # Cria inputs para todos os parâmetros possíveis (alguns serão ocultados).
-
     input_x = html.Div([dcc.Input(id='input-x', type='number', value=1, className="styled-input"), html.Div(id='error-x', className='error-message')])
     input_x_bernoulli = dcc.Input(id='input-x-bernoulli', type='number', step=0.01, min=0, max=1, value=0.5, className="styled-input")
     input_m = html.Div([dcc.Input(id='input-m', type='number', value=10, className="styled-input"), html.Div(id='error-m', className='error-message')])
     input_conhecido = html.Div([dcc.Input(id='input-conhecido', type='number', value=1, className="styled-input"), html.Div(id='error-conhecido', className='error-message')])
 
-
-    # Caso especial para Bernoulli
     if verossimilhanca == "Bernoulli":
 
         return html.Div([
@@ -1991,7 +1962,7 @@ def get_validation_states(a, b, c, d, x, m, n, conhecido, x_bernoulli, priori, v
     """Função central que verifica a validade de todos os parâmetros e retorna um dicionário de status."""
     is_valid = {
         'a': True, 'b': True, 'c': True, 'd': True,
-        'x': True, 'm': True, 'n': True, 'conhecido': True, 'x_bernoulli': True,
+        'x': True, 'm': True, 'n': True, 'conhecido': True,
         'geral': True
     }
     
