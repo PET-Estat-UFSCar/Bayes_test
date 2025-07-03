@@ -9,655 +9,372 @@ Original file is located at
 
 import numpy as np
 import plotly.graph_objects as go
-from scipy.stats import beta, binom,gamma, norm, invgamma
-from dash import Dash, html, dcc, Input, Output, State
+from scipy.stats import beta, binom, gamma, norm, invgamma
+from dash import Dash, html, dcc, Input, Output, State, exceptions
+import dash
 import math
 
 app = Dash(__name__)
+server = app.server
 
-
-# Funções de probabilidade
+# Funções de probabilidade e gráficos (sem alterações)
 def plot_beta_distribution(a, b,v="Priori"):
-    # Gera valores de theta no intervalo (0,1), evitando extremos
+    if a <= 0 or b <= 0: return go.Figure(layout={"title": "Parâmetros a e b devem ser > 0", "template": "plotly_white"})
     theta = np.linspace(0, 1, 1000)
-
-    # Se for a Beta(1,1), a densidade é sempre 1
     if a == 1 and b == 1:
         beta_pdf = np.ones_like(theta)
     else:
         from scipy.stats import beta
         beta_pdf = beta.pdf(theta, a, b)
-
-    # Cria o gráfico usando Plotly
     fig = go.Figure()
-
-    # Adiciona a curva da densidade
     fig.add_trace(go.Scatter(
-        x=theta,
-        y=beta_pdf,
-        mode='lines',
-        name=f'Beta({a}, {b})',
+        x=theta, y=beta_pdf, mode='lines', name=f'Beta({a}, {b})',
         line=dict(color='royalblue', width=2)
     ))
-
-    # Configurações do gráfico
     fig.update_layout(
-        title=f'{v} Beta({a}, {b})',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white',
-        showlegend=True
+        title=f'{v} Beta({a}, {b})', xaxis_title='Suporte do parâmetro',
+        yaxis_title='Densidade', template='plotly_white', showlegend=True
     )
     return fig
 
-
 def plot_gamma_distribution(a, b,v="Priori"):
-    # Calcula a moda da distribuição Gamma (somente para a > 1)
-    if a > 1:
-        mode = (a - 1) / b
-    else:
-        mode = 0  # Não há moda definida para a <= 1
-    # Ajusta o intervalo de x ao redor da moda, aumentando o intervalo
-    x_min = max(0, mode - 3*np.sqrt(a/b**2))  # Aumenta o limite mínimo
-    x_max = mode + 3*np.sqrt(a/b**2)          # Aumenta o limite máximo
-
-    # Gera valores de x no intervalo ajustado
-    x = np.linspace(x_min, x_max, 1000)
-
-    # Calcula a densidade da Gamma(a, scale=1/b)
+    if a <= 0 or b <= 0: return go.Figure(layout={"title": "Parâmetros a e b devem ser > 0", "template": "plotly_white"})
+    if a > 1: mode = (a - 1) / b
+    else: mode = 0
+    x_min = max(0, mode - 3*np.sqrt(a/b**2))
+    x_max = mode + 3*np.sqrt(a/b**2)
+    x = np.linspace(x_min + 1e-9, x_max, 1000)
     gamma_pdf = gamma.pdf(x, a, scale=1/b)
-
-    # Cria o gráfico usando Plotly
     fig = go.Figure()
-
-    # Adiciona a curva da densidade
     fig.add_trace(go.Scatter(
-        x=x,
-        y=gamma_pdf,
-        mode='lines',
-        name=f'Gama({a}, {b})',
+        x=x, y=gamma_pdf, mode='lines', name=f'Gama({a}, {b})',
         line=dict(color='royalblue', width=2)
     ))
-
-    # Personalizações do layout
     fig.update_layout(
-        title=f'{v} Gama({a}, {b})',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white',
-        showlegend=True
+        title=f'{v} Gama({a}, {b})', xaxis_title='Suporte do parâmetro',
+        yaxis_title='Densidade', template='plotly_white', showlegend=True
     )
-
-    # Exibe a figura
     return fig
 
 def plot_normal_distribution(mu, sigma2,v="Priori"):
-    # Desvio padrão é a raiz quadrada da variância
+    if sigma2 <= 0: return go.Figure(layout={"title": "Variância deve ser > 0", "template": "plotly_white"})
     sigma = np.sqrt(sigma2)
-
-    # Gera valores de x ao redor da média (mu), cobrindo a maior parte da densidade
     x = np.linspace(mu - 4*sigma, mu + 4*sigma, 1000)
-
-    # Calcula a função densidade de probabilidade (PDF) da Normal
     normal_pdf = norm.pdf(x, mu, sigma)
-
-    # Cria o gráfico usando Plotly
     fig = go.Figure()
-
-    # Adiciona a curva da densidade
     fig.add_trace(go.Scatter(
-        x=x,
-        y=normal_pdf,
-        mode='lines',
-        name=f'Normal({mu}, {sigma2})',
+        x=x, y=normal_pdf, mode='lines', name=f'Normal({mu}, {sigma2})',
         line=dict(color='royalblue', width=2)
     ))
-
-    # Configurações do gráfico
     fig.update_layout(
-        title=f'{v} Normal({mu}, {sigma2})',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white',
-        showlegend=True
+        title=f'{v} Normal({mu}, {sigma2})', xaxis_title='Suporte do parâmetro',
+        yaxis_title='Densidade', template='plotly_white', showlegend=True
     )
-
     return fig
 
-
 def verossimilhanca_binomial_aproximada(x,m,n):
-  figura=plot_beta_distribution(round(n*x+1,3),round(n*(m-x)+1,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Binomial",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_beta_distribution(round(n*x+1,3),round(n*(m-x)+1,3))
+    figura.data[0].name = 'Verossim.: Binomial'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Binomial", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
 
 def verossimilhanca_poisson_aproximada(x,n):
-  figura=plot_gamma_distribution(round(n*x+1,3),n)
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Poisson",
-      yaxis_title="Verossimilhança",
-  )
-  return figura
+    figura=plot_gamma_distribution(round(n*x+1,3),n)
+    figura.data[0].name = 'Verossim.: Poisson'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Poisson", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
 
 def verossimilhanca_binomial_negativa_aproximada(x,r,n):
-  figura=plot_beta_distribution(round(n*r+1,3),round(n*(x-r)+1,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Binomial negativa",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_beta_distribution(round(n*r+1,3),round(n*(x-r)+1,3))
+    figura.data[0].name = 'Verossim.: Binomial Negativa'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Binomial negativa", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
+
 def verossimilhanca_gama_aproximada(x,a,n):
-  figura=plot_gamma_distribution(round(n*a+1,3),round(n*x,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Gama",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_gamma_distribution(round(n*a+1,3),round(n*x,3))
+    figura.data[0].name = 'Verossim.: Gama'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Gama", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
+
 def verossimilhanca_exponencial_aproximada(x,n):
-  figura=plot_gamma_distribution(n+1,round(n*x,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Exponencial",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_gamma_distribution(n+1,round(n*x,3))
+    figura.data[0].name = 'Verossim.: Exponencial'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Exponencial", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
 
 def verossimilhanca_normal_aproximada(x,sigma2,n):
-  figura=plot_normal_distribution(x,round(sigma2/n,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Normal",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_normal_distribution(x,round(sigma2/n,3))
+    figura.data[0].name = 'Verossim.: Normal'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Normal", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
 
 def verossimilhanca_bernoulli_aproximada(x,n):
-  figura=plot_beta_distribution(round(n*x+1,3),round(n*(1-x)+1,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Bernoulli",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_beta_distribution(round(n*x+1,3),round(n*(1-x)+1,3))
+    figura.data[0].name = 'Verossim.: Bernoulli'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Bernoulli", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
+
 def verossimilhanca_geometrica_aproximada(x,n):
-  figura=plot_beta_distribution(n+1,round(n*(x-1)+1,3))
-  figura.data[0].line.color = 'red'
-  figura.update_layout(
-      title="Verossimilhança reescalada da Geométrica",
-      yaxis_title="Verossimilhança"
-  )
-  return figura
+    figura=plot_beta_distribution(n+1,round(n*(x-1)+1,3))
+    figura.data[0].name = 'Verossim.: Geométrica'
+    figura.data[0].line.color = 'red'
+    figura.update_layout(title="Verossimilhança reescalada da Geométrica", yaxis_title="Verossimilhança", showlegend=True)
+    return figura
 
 def beta_pdf(a,b):
+    if a <= 0 or b <=0: return np.zeros(1000)
     theta = np.linspace(0, 1, 1000)
-    if a == 1 and b == 1:
-        beta_pdf = np.ones_like(theta)
-    else:
-        from scipy.stats import beta
-        beta_pdf = beta.pdf(theta, a, b)
-    return beta_pdf
+    if a == 1 and b == 1: return np.ones_like(theta)
+    else: from scipy.stats import beta; return beta.pdf(theta, a, b)
 
-def beta_binomial(a, b,x,m,n):
-    # Cria o gráfico usando Plotly
+def beta_binomial(a,b,x,m,n):
     fig = go.Figure()
     eixo_x=np.linspace(0,1,1000)
     y_priori=beta_pdf(a,b)
     y_verossimilhanca=beta_pdf(round(n*x+1,3),round(n*(m-x)+1,3))
     y_posteriori=beta_pdf(round(n*x+a,3),round(b+n*(m-x),3))
-    # Adiciona a curva da densidade da priori
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Beta({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Beta({round(n*x+1,3)}, {round(n*(m-x)+1,3)})',
-        line=dict(color='red', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Beta({round(n*x+a,3)}, {round(b+n*(m-x),3)})',
-        line=dict(color='green', width=2)
-    ))
-    # Configurações do gráfico
-    fig.update_layout(
-        title=f'Distribuição Beta-Binomial',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white'
-    )
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Beta({a}, {b})', line=dict(color='royalblue', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Binomial', line=dict(color='red', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Beta({round(n*x+a,3)}, {round(b+n*(m-x),3)})', line=dict(color='green', width=2)))
+    fig.update_layout(title='Distribuição Beta-Binomial', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
     return fig
 
 def beta_bernoulli(a,b,x,n):
-    # Cria o gráfico usando Plotly
     fig = go.Figure()
     eixo_x=np.linspace(0,1,1000)
     y_priori=beta_pdf(a,b)
     y_verossimilhanca=beta_pdf(round(n*x+1,3),round(n*(1-x)+1,3))
     y_posteriori=beta_pdf(round(a+n*x,3),round(b+n*(1-x),3))
-    # Adiciona a curva da densidade da priori
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Beta({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Beta({round(n*x+1,3)}, {round(n*(1-x)+1,3)})',
-        line=dict(color='red', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Beta({round(a+n*x,3)}, {round(b+n*(1-x),3)})',
-        line=dict(color='green', width=2)
-    ))
-    # Configurações do gráfico
-    fig.update_layout(
-        title=f'Distribuição Beta-Bernoulli',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white'
-    )
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Beta({a}, {b})', line=dict(color='royalblue', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Bernoulli', line=dict(color='red', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Beta({round(a+n*x,3)}, {round(b+n*(1-x),3)})', line=dict(color='green', width=2)))
+    fig.update_layout(title='Distribuição Beta-Bernoulli', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
     return fig
 
 def beta_geometrica(a,b,x,n):
-    # Cria o gráfico usando Plotly
     fig = go.Figure()
     eixo_x=np.linspace(0,1,1000)
     y_priori=beta_pdf(a,b)
     y_verossimilhanca=beta_pdf(n+1,round(n*(x-1)+1,3))
     y_posteriori=beta_pdf(a+n,round(b+n*(x-1),3))
-    # Adiciona a curva da densidade da priori
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Beta({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Beta({n+1}, {round(n*(x-1)+1,3)})',
-        line=dict(color='red', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Beta({a+n}, {round(b+n*(x-1),3)})',
-        line=dict(color='green', width=2)
-    ))
-    # Configurações do gráfico
-    fig.update_layout(
-        title=f'Distribuição Beta-Geométrica',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white'
-    )
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Beta({a}, {b})', line=dict(color='royalblue', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Geométrica', line=dict(color='red', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Beta({a+n}, {round(b+n*(x-1),3)})', line=dict(color='green', width=2)))
+    fig.update_layout(title='Distribuição Beta-Geométrica', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
     return fig
 
 def beta_binomial_negativa(a,b,x,r,n):
-    # Cria o gráfico usando Plotly
     fig = go.Figure()
     eixo_x=np.linspace(0,1,1000)
     y_priori=beta_pdf(a,b)
     y_verossimilhanca=beta_pdf(round(n*r+1,3),round(n*(x-r)+1,3))
     y_posteriori=beta_pdf(round(a+n*r,3),round(b+n*(x-r),3))
-    # Adiciona a curva da densidade da priori
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Beta({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Beta({round(n*r+1,3)}, {round(n*(x-r)+1,3)})',
-        line=dict(color='red', width=2)
-    ))
-    fig.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Beta({round(a+n*r,3)}, {round(b+n*(x-r),3)})',
-        line=dict(color='green', width=2)
-    ))
-    # Configurações do gráfico
-    fig.update_layout(
-        title=f'Distribuição Beta-Binomial negativa',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white'
-    )
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Beta({a}, {b})', line=dict(color='royalblue', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Binomial Negativa', line=dict(color='red', width=2)))
+    fig.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Beta({round(a+n*r,3)}, {round(b+n*(x-r),3)})', line=dict(color='green', width=2)))
+    fig.update_layout(title='Distribuição Beta-Binomial negativa', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
     return fig
 
 def gama_pdf(a, b):
-    if a > 1:
-        mode = (a - 1) / b
-    else:
-        mode = 0
+    if a > 1: mode = (a - 1) / b
+    else: mode = 0
     x_min = max(0, mode - 3*np.sqrt(a/b**2))
     x_max = mode + 3*np.sqrt(a/b**2)
     return x_min,x_max
 
 def gama_exponencial(a,b,x,n):
-  x_min_priori,x_max_priori=gama_pdf(a,b)
-  x_min_verossimilhanca,x_max_verossimilhanca=gama_pdf(n+1,n*x)
-  x_min_posteriori,x_max_posteriori=gama_pdf(a+n,b+n*x)
-  x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
-  x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
-  eixo_x=np.linspace(x_min,x_max,1000)
-  y_priori=gamma.pdf(eixo_x,a,scale=1/b)
-  y_verossimilhanca=gamma.pdf(eixo_x,n+1,scale=round(1/(n*x),3))
-  y_posteriori=gamma.pdf(eixo_x,a+n,scale=round(1/(b+n*x),3))
-  figura=go.Figure()
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Gama({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Gama({n+1}, {round(n*x,3)})',
-        line=dict(color='red', width=2)
-    ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Gama({a+n}, {round(b+n*x,3)})',
-        line=dict(color='green', width=2)
-    ))
-  figura.update_layout(
-      title=f'Distribuição Gama-Exponencial',
-      xaxis_title='Suporte do parâmetro',
-      yaxis_title='Densidade',
-      template='plotly_white',
-      showlegend=True
-    )
-  return figura
+    x_min_priori,x_max_priori=gama_pdf(a,b)
+    x_min_verossimilhanca,x_max_verossimilhanca=gama_pdf(n+1,n*x)
+    x_min_posteriori,x_max_posteriori=gama_pdf(a+n,b+n*x)
+    x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
+    x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
+    eixo_x=np.linspace(x_min,x_max,1000)
+    y_priori=gamma.pdf(eixo_x,a,scale=1/b)
+    y_verossimilhanca=gamma.pdf(eixo_x,n+1,scale=round(1/(n*x),3))
+    y_posteriori=gamma.pdf(eixo_x,a+n,scale=round(1/(b+n*x),3))
+    figura=go.Figure()
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Gama({a}, {b})', line=dict(color='royalblue', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Exponencial', line=dict(color='red', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Gama({a+n}, {round(b+n*x,3)})', line=dict(color='green', width=2)))
+    figura.update_layout(title='Distribuição Gama-Exponencial', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white', showlegend=True)
+    return figura
 
 def gama_poisson(a,b,x,n):
-  x_min_priori,x_max_priori=gama_pdf(a,b)
-  x_min_verossimilhanca,x_max_verossimilhanca=gama_pdf(n*x+1,n)
-  x_min_posteriori,x_max_posteriori=gama_pdf(n*x+a,b+n)
-  x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
-  x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
-  eixo_x=np.linspace(x_min,x_max,1000)
-  y_priori=gamma.pdf(eixo_x,a,scale=1/b)
-  y_verossimilhanca=gamma.pdf(eixo_x,round(n*x+1,3),scale=round(1/(n),3))
-  y_posteriori=gamma.pdf(eixo_x,round(n*x+a,3),scale=round(1/(b+n),3))
-  figura=go.Figure()
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Gama({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Gama({round(n*x+1,3)}, {n})',
-        line=dict(color='red', width=2)
-    ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Gama({round(n*x+a,3)}, {b+n})',
-        line=dict(color='green', width=2)
-    ))
-  figura.update_layout(
-      title=f'Distribuição Gama-Poisson',
-      xaxis_title='Suporte do parâmetro',
-      yaxis_title='Densidade',
-      template='plotly_white',
-      showlegend=True
-    )
-  return figura
+    x_min_priori,x_max_priori=gama_pdf(a,b)
+    x_min_verossimilhanca,x_max_verossimilhanca=gama_pdf(n*x+1,n)
+    x_min_posteriori,x_max_posteriori=gama_pdf(n*x+a,b+n)
+    x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
+    x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
+    eixo_x=np.linspace(x_min,x_max,1000)
+    y_priori=gamma.pdf(eixo_x,a,scale=1/b)
+    y_verossimilhanca=gamma.pdf(eixo_x,round(n*x+1,3),scale=round(1/(n),3))
+    y_posteriori=gamma.pdf(eixo_x,round(n*x+a,3),scale=round(1/(b+n),3))
+    figura=go.Figure()
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Gama({a}, {b})', line=dict(color='royalblue', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Poisson', line=dict(color='red', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Gama({round(n*x+a,3)}, {b+n})', line=dict(color='green', width=2)))
+    figura.update_layout(title='Distribuição Gama-Poisson', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white', showlegend=True)
+    return figura
 
 def gama_gama(a,b,x,conhecido,n):
-  x_min_priori,x_max_priori=gama_pdf(a,b)
-  x_min_verossimilhanca,x_max_verossimilhanca=gama_pdf(n*conhecido+1,n*x)
-  x_min_posteriori,x_max_posteriori=gama_pdf(a+n*conhecido,b+n*x)
-  x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
-  x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
-  eixo_x=np.linspace(x_min,x_max,1000)
-  y_priori=gamma.pdf(eixo_x,a,scale=1/b)
-  y_verossimilhanca=gamma.pdf(eixo_x,round(n*conhecido+1,3),scale=round(1/(n*x),3))
-  y_posteriori=gamma.pdf(eixo_x,round(a+n*conhecido,3),scale=round(1/(b+n*x),3))
-  figura=go.Figure()
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Gama({a}, {b})',
-        line=dict(color='royalblue', width=2)
-    ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Gama({round(n*conhecido+1,3)}, {round(n*x,3)})',
-        line=dict(color='red', width=2)
-    ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Gama({round(a+n*conhecido,3)}, {round(b+n*x,3)})',
-        line=dict(color='green', width=2)
-    ))
-    # Personalizações do layout
-  figura.update_layout(
-      title=f'Distribuição Gama-Gama',
-      xaxis_title='Suporte do parâmetro',
-      yaxis_title='Densidade',
-      template='plotly_white',
-      showlegend=True
-    )
-
-    # Exibe a figura
-  return figura
+    x_min_priori,x_max_priori=gama_pdf(a,b)
+    x_min_verossimilhanca,x_max_verossimilhanca=gama_pdf(n*conhecido+1,n*x)
+    x_min_posteriori,x_max_posteriori=gama_pdf(a+n*conhecido,b+n*x)
+    x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
+    x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
+    eixo_x=np.linspace(x_min,x_max,1000)
+    y_priori=gamma.pdf(eixo_x,a,scale=1/b)
+    y_verossimilhanca=gamma.pdf(eixo_x,round(n*conhecido+1,3),scale=round(1/(n*x),3))
+    y_posteriori=gamma.pdf(eixo_x,round(a+n*conhecido,3),scale=round(1/(b+n*x),3))
+    figura=go.Figure()
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Gama({a}, {b})', line=dict(color='royalblue', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Gama', line=dict(color='red', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Gama({round(a+n*conhecido,3)}, {round(b+n*x,3)})', line=dict(color='green', width=2)))
+    figura.update_layout(title='Distribuição Gama-Gama', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white', showlegend=True)
+    return figura
 
 def normal_pdf(mu,sigma2):
+    if sigma2 <= 0: return mu-4, mu+4
     sigma = np.sqrt(sigma2)
     return mu - 4*sigma,  mu + 4*sigma
+
 def normal_normal(mu,sigma2,x,conhecido,n):
-  x_min_priori,x_max_priori=normal_pdf(mu,sigma2)
-  x_min_verossimilhanca,x_max_verossimilhanca=normal_pdf(x,conhecido/n)
-  x_min_posteriori,x_max_posteriori=normal_pdf((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),sigma2*conhecido/(n*sigma2+conhecido))
-  x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
-  x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
-  eixo_x=np.linspace(x_min,x_max,1000)
-  y_priori=norm.pdf(eixo_x,mu,np.sqrt(sigma2))
-  y_verossimilhanca=norm.pdf(eixo_x,x,round(np.sqrt(conhecido/n),3))
-  y_posteriori=norm.pdf(eixo_x,round((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),3),round(np.sqrt(sigma2*conhecido/(n*sigma2+conhecido)),3))
-  figura = go.Figure()
-
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_priori,
-        mode='lines',
-        name=f'Normal({mu}, {sigma2})',
-        line=dict(color='royalblue', width=2)
-  ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_verossimilhanca,
-        mode='lines',
-        name=f'Normal({x}, {round(conhecido/n,3)})',
-        line=dict(color='red', width=2)
-  ))
-  figura.add_trace(go.Scatter(
-        x=eixo_x,
-        y=y_posteriori,
-        mode='lines',
-        name=f'Normal({round((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),3)}, {round(sigma2*conhecido/(n*sigma2+conhecido),3)})',
-        line=dict(color='green', width=2)
-  ))
-  figura.update_layout(
-        title=f'Distribuição Normal-Normal',
-        xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade',
-        template='plotly_white'
-  )
-
-  return figura
+    x_min_priori,x_max_priori=normal_pdf(mu,sigma2)
+    x_min_verossimilhanca,x_max_verossimilhanca=normal_pdf(x,conhecido/n)
+    x_min_posteriori,x_max_posteriori=normal_pdf((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),sigma2*conhecido/(n*sigma2+conhecido))
+    x_min=min(x_min_priori,x_min_verossimilhanca,x_min_posteriori)
+    x_max=max(x_max_priori,x_max_verossimilhanca,x_max_posteriori)
+    eixo_x=np.linspace(x_min,x_max,1000)
+    y_priori=norm.pdf(eixo_x,mu,np.sqrt(sigma2))
+    y_verossimilhanca=norm.pdf(eixo_x,x,round(np.sqrt(conhecido/n),3))
+    y_posteriori=norm.pdf(eixo_x,round((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),3),round(np.sqrt(sigma2*conhecido/(n*sigma2+conhecido)),3))
+    figura = go.Figure()
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Normal({mu}, {sigma2})', line=dict(color='royalblue', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Normal', line=dict(color='red', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Normal({round((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),3)}, {round(sigma2*conhecido/(n*sigma2+conhecido),3)})', line=dict(color='green', width=2)))
+    figura.update_layout(title='Distribuição Normal-Normal', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
+    return figura
 
 def posteriori_beta(a,b,v="Posteriori"):
-  figura=plot_beta_distribution(a,b,v)
-  figura.data[0].line.color = 'green'
-  return figura
+    figura=plot_beta_distribution(a,b,v)
+    figura.data[0].line.color = 'green'
+    return figura
 
 def posteriori_gama(a,b,v="Posteriori"):
-  figura=plot_gamma_distribution(a,b,v)
-  figura.data[0].line.color = 'green'
-  return figura
+    figura=plot_gamma_distribution(a,b,v)
+    figura.data[0].line.color = 'green'
+    return figura
 
 def posteriori_normal(a,b,v="Posteriori"):
-  figura=plot_normal_distribution(a,b,v)
-  figura.data[0].line.color = 'green'
-  return figura
+    figura=plot_normal_distribution(a,b,v)
+    figura.data[0].line.color = 'green'
+    return figura
 
 def normal_gama_pdf(x, tau, mu, lambda_, alpha, beta):
-  densidade=(beta**alpha)*np.sqrt(lambda_)*tau**(alpha-0.5)*np.exp(-beta*tau)*np.exp(-lambda_*tau*(x-mu)**2/2)/(math.gamma(alpha)*np.sqrt(2*np.pi))
-  return densidade
+    tau = np.maximum(tau, 1e-9)
+    with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
+        term1 = (beta**alpha)
+        term2 = np.sqrt(lambda_)
+        term3 = tau**(alpha-0.5)
+        term4 = np.exp(-beta*tau)
+        term5 = np.exp(-lambda_*tau*(x-mu)**2/2)
+        denominador = (math.gamma(alpha)*np.sqrt(2*np.pi))
+        densidade = (term1 * term2 * term3 * term4 * term5) / denominador
+    return np.nan_to_num(densidade)
+
 
 colorscale_blue = [[0.0, "lightblue"],[0.5, "blue"],[1.0, "darkblue"]]
 colorscale_red = [[0.0, "lightcoral"],[0.5, "red"],[1.0, "darkred"]]
 colorscale_green = [[0.0, "lightgreen"],[0.5, "green"],[1.0, "darkgreen"]]
 
 def plot_normal_gama_distribution(mu,lambda_,alpha,beta,cor=colorscale_blue,v="Priori"):
-  mode_tau=(alpha-0.5)/beta
-  desvio_x=np.sqrt(beta/(lambda_*(alpha-1)))
-  desvio_tau=np.sqrt(alpha/beta**2)
-  x_vals=np.linspace(mu-3*desvio_x,mu+3*desvio_x,100)
-  tau_vals=np.linspace(max(mode_tau-3*desvio_tau,0),mode_tau+3*desvio_tau,100)
-  X, T = np.meshgrid(x_vals, tau_vals)
-
-    # Calculando a densidade para cada ponto (X, T)
-  Z = normal_gama_pdf(X, T, mu, lambda_, alpha, beta)
-
-    # Criando o gráfico 3D
-  fig = go.Figure(data=[go.Surface(z=Z, x=X, y=T, colorscale=cor)])
-
-    # Ajustando rótulos e layout
-  fig.update_layout(title=f"{v} Normal-Gama({round(mu,3)}, {round(lambda_,3)}, {round(alpha,3)}, {round(beta,3)})",
-                    scene=dict(
-                    xaxis_title="x",
-                    yaxis_title="tau",
-                    zaxis_title="Densidade"
-                      ))
-
-  return fig
+    if alpha <= 1 or lambda_ <= 0 or beta <=0: return go.Figure(layout={"title": f"Parâmetros Inválidos para {v} Normal-Gama", "template": "plotly_white"})
+    mode_tau=(alpha-0.5)/beta
+    desvio_x=np.sqrt(beta/(lambda_*(alpha-1)))
+    desvio_tau=np.sqrt(alpha/beta**2)
+    x_vals=np.linspace(mu-3*desvio_x,mu+3*desvio_x,100)
+    tau_vals=np.linspace(max(mode_tau-3*desvio_tau,0.001),mode_tau+3*desvio_tau,100)
+    X, T = np.meshgrid(x_vals, tau_vals)
+    Z = normal_gama_pdf(X, T, mu, lambda_, alpha, beta)
+    fig = go.Figure(data=[go.Surface(z=Z, x=X, y=T, colorscale=cor)])
+    fig.update_layout(title=f"{v} Normal-Gama({round(mu,3)}, {round(lambda_,3)}, {round(alpha,3)}, {round(beta,3)})",
+                          scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Densidade"))
+    return fig
 
 def verossimilhanca_normal_gama_aproximada(x,s,n):
-  figura=plot_normal_gama_distribution(x,n,(n+1)/2,n*s/2,colorscale_red)
-  figura.update_layout(title="Verossimilhança aproximada da Normal",
-                    scene=dict(
-                    xaxis_title="x",
-                    yaxis_title="tau",
-                    zaxis_title="Verossimilhança"
-                      ))
-  return figura
+    alpha_vero = (n-1)/2
+    beta_vero = n*s/2
+    if alpha_vero <= 0 or beta_vero <= 0: return go.Figure(layout={"title": "Parâmetros da Verossimilhança Inválidos", "template": "plotly_white"})
+    figura=plot_normal_gama_distribution(x,n,alpha_vero, beta_vero ,colorscale_red, "Verossimilhança")
+    figura.update_layout(title="Verossimilhança aproximada da Normal",
+                              scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Verossimilhança"))
+    return figura
 
 def posteriori_Normal_Gama(mu,lambda_,alpha,beta,x,s,n,v="Posteriori"):
-  figura=plot_normal_gama_distribution((lambda_*mu+n*x)/(lambda_+n),lambda_+n,alpha+n/2,beta+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2,colorscale_green,v)
-  return figura
+    mu_post = (lambda_*mu+n*x)/(lambda_+n)
+    lambda_post = lambda_+n
+    alpha_post = alpha+n/2
+    beta_post = beta+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2
+    if alpha_post <= 1: return go.Figure(layout={"title": "Parâmetros da Posteriori Inválidos", "template": "plotly_white"})
+    figura=plot_normal_gama_distribution(mu_post, lambda_post, alpha_post, beta_post, colorscale_green,v)
+    return figura
 
 def xvals_tauvals(mu,lambda_,alpha,beta):
-  mode_tau=(alpha-0.5)/beta
-  desvio_x=np.sqrt(beta/(lambda_*(alpha-1)))
-  desvio_tau=np.sqrt(alpha/beta**2)
-  x_vals=np.linspace(mu-3*desvio_x,mu+3*desvio_x,100)
-  tau_vals=np.linspace(max(mode_tau-3*desvio_tau,0),mode_tau+3*desvio_tau,100)
-  return x_vals,tau_vals
+    if alpha <= 1 or lambda_ <= 0 or beta <= 0: return (np.linspace(mu-3, mu+3, 100), np.linspace(0.001, 3, 100))
+    mode_tau=(alpha-0.5)/beta
+    desvio_x=np.sqrt(beta/(lambda_*(alpha-1)))
+    desvio_tau=np.sqrt(alpha/beta**2)
+    x_vals=np.linspace(mu-3*desvio_x,mu+3*desvio_x,100)
+    tau_vals=np.linspace(max(mode_tau-3*desvio_tau,0.001),mode_tau+3*desvio_tau,100)
+    return x_vals,tau_vals
+
 def Normal_Gama_final(mu,lambda_,alpha,beta,x,s,n):
-  x_priori,tau_priori=xvals_tauvals(mu,lambda_,alpha,beta)
-  x_verossimilhanca,tau_verossimilhanca=xvals_tauvals(x,n,(n+1)/2,n*s/2)
-  x_posteriori,tau_posteriori=xvals_tauvals((lambda_*mu+n*x)/(lambda_+n),lambda_+n,alpha+n/2,beta+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2)
-  x_final=np.linspace(min(x_priori[0],x_verossimilhanca[0],x_posteriori[0]),max(x_priori[-1],x_verossimilhanca[-1],x_posteriori[-1]),100)
-  tau_final=np.linspace(min(tau_priori[0],tau_verossimilhanca[0],tau_posteriori[0]),max(tau_priori[-1],tau_verossimilhanca[-1],tau_posteriori[-1]),100)
-  X, T = np.meshgrid(x_final, tau_final)
-  Z_priori = normal_gama_pdf(X, T, mu, lambda_, alpha, beta)
-  Z_verossimilhanca = normal_gama_pdf(X, T, x, n, (n+1)/2, n*s/2)
-  Z_posteriori = normal_gama_pdf(X, T, (lambda_*mu+n*x)/(lambda_+n), lambda_+n, alpha+n/2, (beta+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2))
-  fig = go.Figure(go.Surface(z=Z_priori, x=X, y=T, colorscale=colorscale_blue,name="Priori",showscale=False))
-  fig.add_trace(go.Surface(z=Z_verossimilhanca, x=X, y=T, colorscale=colorscale_red,name="Verossimilhança",showscale=False))
-  fig.add_trace(go.Surface(z=Z_posteriori, x=X, y=T, colorscale=colorscale_green,name="Posteriori",showscale=False))
-  fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='blue'), name="Priori"))
-  fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='red'), name="Verossimilhança"))
-  fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='green'), name="Posteriori"))
-  fig.update_layout(title="Distribuição Normal-Gama",
-                    showlegend=True,
-                    scene=dict(
-                    xaxis_title="x",
-                    yaxis_title="tau",
-                    zaxis_title="Densidade"
-                      ))
-  return fig
+    if any(p is None for p in [mu, lambda_, alpha, beta, x, s, n]): return go.Figure(layout={"title": "Aguardando todos os parâmetros", "template": "plotly_white"})
+    if any(p <= 0 for p in [lambda_, alpha, beta, n, s]) or alpha <= 1: return go.Figure(layout={"title": "Parâmetros da Priori Inválidos", "template": "plotly_white"})
+    
+    mu_post = (lambda_*mu+n*x)/(lambda_+n)
+    lambda_post = lambda_+n
+    alpha_post = alpha+n/2
+    beta_post = beta+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2
 
+    if alpha_post <=1 : return go.Figure(layout={"title": "Parâmetros da Posteriori Inválidos", "template": "plotly_white"})
+    if (n-1)/2 <=0 : return go.Figure(layout={"title": "Parâmetros da Verossimilhança Inválidos", "template": "plotly_white"})
 
+    x_priori,tau_priori=xvals_tauvals(mu,lambda_,alpha,beta)
+    x_verossimilhanca,tau_verossimilhanca=xvals_tauvals(x,n,(n-1)/2,n*s/2)
+    x_posteriori,tau_posteriori=xvals_tauvals(mu_post,lambda_post,alpha_post,beta_post)
 
+    x_min_val = min(x_priori[0],x_verossimilhanca[0],x_posteriori[0])
+    x_max_val = max(x_priori[-1],x_verossimilhanca[-1],x_posteriori[-1])
+    tau_min_val = min(tau_priori[0],tau_verossimilhanca[0],tau_posteriori[0])
+    tau_max_val = max(tau_priori[-1],tau_verossimilhanca[-1],tau_posteriori[-1])
 
+    x_final=np.linspace(x_min_val, x_max_val, 70)
+    tau_final=np.linspace(tau_min_val, tau_max_val, 70)
 
+    X, T = np.meshgrid(x_final, tau_final)
+    Z_priori = normal_gama_pdf(X, T, mu, lambda_, alpha, beta)
+    Z_verossimilhanca = normal_gama_pdf(X, T, x, n, (n-1)/2, n*s/2)
+    Z_posteriori = normal_gama_pdf(X, T, mu_post, lambda_post, alpha_post, beta_post)
 
+    fig = go.Figure(go.Surface(z=Z_priori, x=X, y=T, colorscale=colorscale_blue,name="Priori",showscale=False))
+    fig.add_trace(go.Surface(z=Z_verossimilhanca, x=X, y=T, colorscale=colorscale_red,name="Verossimilhança",showscale=False, opacity=0.7))
+    fig.add_trace(go.Surface(z=Z_posteriori, x=X, y=T, colorscale=colorscale_green,name="Posteriori",showscale=False, opacity=0.7))
 
+    fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='blue'), name="Priori"))
+    fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='red'), name="Verossimilhança"))
+    fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='green'), name="Posteriori"))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    fig.update_layout(title="Distribuição Normal-Gama", showlegend=True,
+                          scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Densidade"))
+    return fig
 
 
 lista_prioris=list(["Beta","Gama","Normal","Normal-Gama"])
