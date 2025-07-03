@@ -62,17 +62,17 @@ body {
 
 /* Estilo para inputs e dropdowns */
 .styled-input, .Select-control, .Select-input, .Select-value {
-    width: calc(100% - 22px); /* Ajustado para padding + border */
+    width: calc(100% - 22px);
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ced4da;
     margin-top: 5px;
-    margin-bottom: 5px; /* Reduzido para dar espaço à msg de erro */
+    margin-bottom: 5px;
     font-size: 16px;
-    transition: border-color 0.3s ease; /* Adicionado para suavizar a mudança de cor */
+    transition: border-color 0.2s ease-in-out;
 }
 
-/* NOVA CLASSE PARA MENSAGEM DE ERRO */
+/* NOVA CLASSE ADICIONADA PARA MENSAGENS DE ERRO */
 .error-message {
     color: red;
     font-size: 12px;
