@@ -35,22 +35,39 @@ COLORSCALE_RED = [[0.0, "lightcoral"], [0.5, "red"], [1.0, "darkred"]]
 COLORSCALE_GREEN = [[0.0, "lightgreen"], [0.5, "green"], [1.0, "darkgreen"]]
 
 # Dicionários de estilo para componentes do layout
-COLORS = {'background': '#F3F6FA', 'text': '#333333', 'light_grey': '#E9ECEF'}
+COLORS = {
+    'background': '#F3F6FA',
+    'text': '#333333',
+    'light_grey': '#E9ECEF'
+}
 HEADER_STYLE = {
-    "backgroundColor": "white", "padding": "20px", "textAlign": "center",
-    "borderBottom": f"1px solid {COLORS['light_grey']}", "display": "flex",
-    "alignItems": "center", "justifyContent": "space-between",
+    "backgroundColor": "white",
+    "padding": "20px",
+    "textAlign": "center",
+    "borderBottom": f"1px solid {COLORS['light_grey']}",
+    "display": "flex",
+    "alignItems": "center",
+    "justifyContent": "space-between",
     "boxShadow": "0 2px 4px rgba(0,0,0,0.05)"
 }
-LOGO_STYLE = {"height": "60px"}
-NAV_BUTTONS_STYLE = {"display": "flex", "gap": "15px"}
+LOGO_STYLE = {
+    "height": "60px"
+}
+NAV_BUTTONS_STYLE = {
+    "display": "flex",
+    "gap": "15px"
+}
 MAIN_CONTENT_STYLE = {
-    "padding": "30px", "backgroundColor": COLORS['background'],
+    "padding": "30px",
+    "backgroundColor": COLORS['background'],
     "fontFamily": "Roboto, sans-serif"
 }
 CARD_STYLE = {
-    "backgroundColor": "white", "padding": "20px", "borderRadius": "10px",
-    "boxShadow": "0 2px 4px rgba(0,0,0,0.05)", "marginBottom": "20px"
+    "backgroundColor": "white",
+    "padding": "20px",
+    "borderRadius": "10px",
+    "boxShadow": "0 2px 4px rgba(0,0,0,0.05)",
+    "marginBottom": "20px"
 }
 
 
@@ -65,12 +82,12 @@ CARD_STYLE = {
 def plot_beta_distribution(a, b, v="Priori"):
     """Gera um gráfico da distribuição Beta."""
     # Valida os parâmetros de forma.
-    if a<=0 or b<=0:
+    if a <= 0 or b <= 0:
         return go.Figure(layout={"title": "Parâmetros a e b devem ser > 0", "template": "plotly_white"})
     # Gera valores de theta no intervalo (0,1).
     theta = np.linspace(0, 1, 1000)
     # Calcula a PDF da Beta, com caso especial para a Uniforme (Beta(1,1)).
-    beta_pdf_vals = beta.pdf(theta, a, b) if not (a==1 and b==1) else np.ones_like(theta)
+    beta_pdf_vals = beta.pdf(theta, a, b) if not (a == 1 and b == 1) else np.ones_like(theta)
 
     # Cria a figura com a curva da PDF.
     fig = go.Figure(go.Scatter(
@@ -93,57 +110,69 @@ def plot_beta_distribution(a, b, v="Priori"):
 def plot_gamma_distribution(a, b, v="Priori"):
     """Gera um gráfico da distribuição Gama."""
     # Valida os parâmetros de forma e taxa.
-    if a<=0 or b<=0:
+    if a <= 0 or b <= 0:
         return go.Figure(layout={"title": "Parâmetros a e b devem ser > 0", "template": "plotly_white"})
     # Calcula a moda e desvio padrão para definir um intervalo de plotagem razoável.
-    mode = (a-1)/b if a>1 else 0
-    std_dev = np.sqrt(a/b**2)
-    x_min = max(0, mode-3*std_dev)
-    x_max = mode+3*std_dev
+    mode = (a - 1) / b if a > 1 else 0
+    std_dev = np.sqrt(a / b ** 2)
+    x_min = max(0, mode - 3 * std_dev)
+    x_max = mode + 3 * std_dev
     # Gera valores de x no intervalo calculado, evitando x=0.
-    x = np.linspace(x_min+1e-9, x_max, 1000)
+    x = np.linspace(x_min + 1e-9, x_max, 1000)
     # Calcula a PDF da Gama.
-    gamma_pdf_vals = gamma.pdf(x, a, scale=1/b)
+    gamma_pdf_vals = gamma.pdf(x, a, scale=1 / b)
 
     # Cria a figura com a curva da PDF.
     fig = go.Figure(go.Scatter(
-        x=x, y=gamma_pdf_vals, mode='lines', name=f'Gama({a}, {b})',
+        x=x,
+        y=gamma_pdf_vals,
+        mode='lines',
+        name=f'Gama({a}, {b})',
         line=dict(color='royalblue', width=2)
     ))
     # Atualiza o layout do gráfico.
     fig.update_layout(
-        title=f'{v} Gama({a}, {b})', xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade', template='plotly_white', showlegend=True
+        title=f'{v} Gama({a}, {b})',
+        xaxis_title='Suporte do parâmetro',
+        yaxis_title='Densidade',
+        template='plotly_white',
+        showlegend=True
     )
     return fig
 
 def plot_normal_distribution(mu, sigma2, v="Priori"):
     """Gera um gráfico da distribuição Normal."""
     # Valida o parâmetro de variância.
-    if sigma2<=0:
+    if sigma2 <= 0:
         return go.Figure(layout={"title": "Variância deve ser > 0", "template": "plotly_white"})
     # Calcula o desvio padrão e define um intervalo de plotagem.
     sigma = np.sqrt(sigma2)
-    x = np.linspace(mu-4*sigma, mu+4*sigma, 1000)
+    x = np.linspace(mu - 4 * sigma, mu + 4 * sigma, 1000)
     # Calcula a PDF da Normal.
     normal_pdf_vals = norm.pdf(x, mu, sigma)
 
     # Cria a figura com a curva da PDF.
     fig = go.Figure(go.Scatter(
-        x=x, y=normal_pdf_vals, mode='lines', name=f'Normal({mu}, {sigma2})',
+        x=x,
+        y=normal_pdf_vals,
+        mode='lines',
+        name=f'Normal({mu}, {sigma2})',
         line=dict(color='royalblue', width=2)
     ))
     # Atualiza o layout do gráfico.
     fig.update_layout(
-        title=f'{v} Normal({mu}, {sigma2})', xaxis_title='Suporte do parâmetro',
-        yaxis_title='Densidade', template='plotly_white', showlegend=True
+        title=f'{v} Normal({mu}, {sigma2})',
+        xaxis_title='Suporte do parâmetro',
+        yaxis_title='Densidade',
+        template='plotly_white',
+        showlegend=True
     )
     return fig
 
 def plot_normal_gama_distribution(mu, lambda_, alpha, beta_val, cor=COLORSCALE_BLUE, v="Priori"):
     """Gera um gráfico de superfície 3D da distribuição Normal-Gama."""
     # Valida os parâmetros da distribuição.
-    if alpha<=1 or lambda_<=0 or beta_val<=0:
+    if alpha <= 1 or lambda_ <= 0 or beta_val <= 0:
         return go.Figure(layout={"title": f"Parâmetros Inválidos para {v} Normal-Gama", "template": "plotly_white"})
 
     # Calcula os intervalos para os eixos x (μ) e y (τ).
@@ -158,7 +187,11 @@ def plot_normal_gama_distribution(mu, lambda_, alpha, beta_val, cor=COLORSCALE_B
     # Atualiza o layout da cena 3D.
     fig.update_layout(
         title=f"{v} Normal-Gama({round(mu,3)}, {round(lambda_,3)}, {round(alpha,3)}, {round(beta_val,3)})",
-        scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Densidade")
+        scene=dict(
+            xaxis_title="μ",
+            yaxis_title="τ",
+            zaxis_title="Densidade"
+        )
     )
     return fig
 
@@ -172,7 +205,11 @@ def _plot_verossimilhanca(fig, nome_dist, titulo):
     fig.data[0].name = f'Verossim.: {nome_dist}'
     fig.data[0].line.color = 'red'
     # Atualiza os títulos do gráfico.
-    fig.update_layout(title=f"Verossimilhança reescalada da {titulo}", yaxis_title="Verossimilhança", showlegend=True)
+    fig.update_layout(
+        title=f"Verossimilhança reescalada da {titulo}",
+        yaxis_title="Verossimilhança",
+        showlegend=True
+    )
     return fig
 
 # As funções seguintes plotam a verossimilhança aproximada de um modelo estatístico,
@@ -180,51 +217,51 @@ def _plot_verossimilhanca(fig, nome_dist, titulo):
 
 def verossimilhanca_binomial_aproximada(x, m, n):
     """Plota a verossimilhança da Binomial usando uma forma Beta."""
-    figura = plot_beta_distribution(round(n*x+1, 3), round(n*(m-x)+1, 3))
+    figura = plot_beta_distribution(round(n * x + 1, 3), round(n * (m - x) + 1, 3))
     return _plot_verossimilhanca(figura, 'Binomial', 'Binomial')
 
 def verossimilhanca_poisson_aproximada(x, n):
     """Plota a verossimilhança da Poisson usando uma forma Gama."""
-    figura = plot_gamma_distribution(round(n*x+1, 3), n)
+    figura = plot_gamma_distribution(round(n * x + 1, 3), n)
     return _plot_verossimilhanca(figura, 'Poisson', 'Poisson')
 
 def verossimilhanca_binomial_negativa_aproximada(x, r, n):
     """Plota a verossimilhança da Binomial Negativa usando uma forma Beta."""
-    figura = plot_beta_distribution(round(n*r+1, 3), round(n*(x-r)+1, 3))
+    figura = plot_beta_distribution(round(n * r + 1, 3), round(n * (x - r) + 1, 3))
     return _plot_verossimilhanca(figura, 'Binomial Negativa', 'Binomial negativa')
 
 def verossimilhanca_gama_aproximada(x, a, n):
     """Plota a verossimilhança da Gama usando uma forma Gama."""
-    figura = plot_gamma_distribution(round(n*a+1, 3), round(n*x, 3))
+    figura = plot_gamma_distribution(round(n * a + 1, 3), round(n * x, 3))
     return _plot_verossimilhanca(figura, 'Gama', 'Gama')
 
 def verossimilhanca_exponencial_aproximada(x, n):
     """Plota a verossimilhança da Exponencial usando uma forma Gama."""
-    figura = plot_gamma_distribution(n+1, round(n*x, 3))
+    figura = plot_gamma_distribution(n + 1, round(n * x, 3))
     return _plot_verossimilhanca(figura, 'Exponencial', 'Exponencial')
 
 def verossimilhanca_normal_aproximada(x, sigma2, n):
     """Plota a verossimilhança da Normal usando uma forma Normal."""
-    figura = plot_normal_distribution(x, round(sigma2/n, 3))
+    figura = plot_normal_distribution(x, round(sigma2 / n, 3))
     return _plot_verossimilhanca(figura, 'Normal', 'Normal')
 
 def verossimilhanca_bernoulli_aproximada(x, n):
     """Plota a verossimilhança da Bernoulli usando uma forma Beta."""
-    figura = plot_beta_distribution(round(n*x+1, 3), round(n*(1-x)+1, 3))
+    figura = plot_beta_distribution(round(n * x + 1, 3), round(n * (1 - x) + 1, 3))
     return _plot_verossimilhanca(figura, 'Bernoulli', 'Bernoulli')
 
 def verossimilhanca_geometrica_aproximada(x, n):
     """Plota a verossimilhança da Geométrica usando uma forma Beta."""
-    figura = plot_beta_distribution(n+1, round(n*(x-1)+1, 3))
+    figura = plot_beta_distribution(n + 1, round(n * (x - 1) + 1, 3))
     return _plot_verossimilhanca(figura, 'Geométrica', 'Geométrica')
 
 def verossimilhanca_normal_gama_aproximada(x, s, n):
     """Plota a verossimilhança 3D da Normal usando uma forma Normal-Gama."""
     # Calcula os parâmetros da Normal-Gama que representam o kernel da verossimilhança.
-    alpha_vero = (n-1)/2
-    beta_vero = n*s/2
+    alpha_vero = (n - 1) / 2
+    beta_vero = n * s / 2
     # Valida os parâmetros.
-    if alpha_vero<=0 or beta_vero<=0:
+    if alpha_vero <= 0 or beta_vero <= 0:
         return go.Figure(layout={"title": "Parâmetros da Verossimilhança Inválidos", "template": "plotly_white"})
 
     # Gera o gráfico 3D usando a função base.
@@ -232,7 +269,11 @@ def verossimilhanca_normal_gama_aproximada(x, s, n):
     # Customiza os títulos para refletir que é uma verossimilhança.
     figura.update_layout(
         title="Verossimilhança aproximada da Normal",
-        scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Verossimilhança")
+        scene=dict(
+            xaxis_title="μ",
+            yaxis_title="τ",
+            zaxis_title="Verossimilhança"
+        )
     )
     return figura
 
@@ -262,13 +303,13 @@ def posteriori_normal(a, b, v="Posteriori"):
 def posteriori_Normal_Gama(mu, lambda_, alpha, beta_val, x, s, n, v="Posteriori"):
     """Calcula os parâmetros e plota a distribuição a posteriori Normal-Gama."""
     # Atualiza os parâmetros da priori com os dados (regras de atualização da conjugada).
-    mu_post = (lambda_*mu+n*x)/(lambda_+n)
-    lambda_post = lambda_+n
-    alpha_post = alpha+n/2
-    beta_post = beta_val+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2
+    mu_post = (lambda_ * mu + n * x) / (lambda_ + n)
+    lambda_post = lambda_ + n
+    alpha_post = alpha + n / 2
+    beta_post = beta_val + (n * s + (lambda_ * n * (x - mu) ** 2) / (lambda_ + n)) / 2
 
     # Valida o novo parâmetro alfa.
-    if alpha_post<=1:
+    if alpha_post <= 1:
         return go.Figure(layout={"title": "Parâmetros da Posteriori Inválidos", "template": "plotly_white"})
 
     # Plota a distribuição resultante.
@@ -281,37 +322,48 @@ def posteriori_Normal_Gama(mu, lambda_, alpha, beta_val, x, s, n, v="Posteriori"
 def beta_pdf_vals(a, b):
     """Calcula os valores da PDF da distribuição Beta para um eixo padrão."""
     # Valida os parâmetros.
-    if a<=0 or b<=0: return np.zeros(1000)
+    if a <= 0 or b <= 0: return np.zeros(1000)
     # Gera o eixo e calcula a PDF.
     theta = np.linspace(0, 1, 1000)
-    return beta.pdf(theta, a, b) if not (a==1 and b==1) else np.ones_like(theta)
+    return beta.pdf(theta, a, b) if not (a == 1 and b == 1) else np.ones_like(theta)
 
 def gama_range(a, b):
     """Calcula um intervalo razoável para o eixo x de uma distribuição Gama."""
     # Usa a moda e o desvio padrão para centralizar o gráfico.
-    mode = (a-1)/b if a>1 else 0
-    std_dev = np.sqrt(a/b**2)
-    x_min = max(0, mode-3*std_dev)
-    x_max = mode+3*std_dev
+    mode = (a - 1) / b if a > 1 else 0
+    std_dev = np.sqrt(a / b ** 2)
+    x_min = max(0, mode - 3 * std_dev)
+    x_max = mode + 3 * std_dev
     return x_min, x_max
 
 def normal_range(mu, sigma2):
     """Calcula um intervalo razoável para o eixo x de uma distribuição Normal."""
-    if sigma2<=0: return mu-4, mu+4
+    if sigma2 <= 0: return mu - 4, mu + 4
     sigma = np.sqrt(sigma2)
     # Define o intervalo como +/- 4 desvios-padrão da média.
-    return mu-4*sigma, mu+4*sigma
+    return mu - 4 * sigma, mu + 4 * sigma
 
 def _plot_conjugada_1d(eixo_x, y_priori, y_verossimilhanca, y_posteriori, nomes, titulo):
     """Função auxiliar para criar o gráfico 1D combinado."""
     # Cria uma figura vazia.
     fig = go.Figure()
     # Adiciona as três curvas (priori, verossimilhança, posteriori) na mesma figura.
-    fig.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=nomes['priori'], line=dict(color='royalblue', width=2)))
-    fig.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name=nomes['verossimilhanca'], line=dict(color='red', width=2)))
-    fig.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=nomes['posteriori'], line=dict(color='green', width=2)))
+    fig.add_trace(go.Scatter(
+        x=eixo_x, y=y_priori, mode='lines', name=nomes['priori'], line=dict(color='royalblue', width=2)
+    ))
+    fig.add_trace(go.Scatter(
+        x=eixo_x, y=y_verossimilhanca, mode='lines', name=nomes['verossimilhanca'], line=dict(color='red', width=2)
+    ))
+    fig.add_trace(go.Scatter(
+        x=eixo_x, y=y_posteriori, mode='lines', name=nomes['posteriori'], line=dict(color='green', width=2)
+    ))
     # Atualiza o layout do gráfico.
-    fig.update_layout(title=titulo, xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
+    fig.update_layout(
+        title=titulo,
+        xaxis_title='Suporte do parâmetro',
+        yaxis_title='Densidade',
+        template='plotly_white'
+    )
     return fig
 
 # As funções a seguir calculam as PDFs para cada uma das três distribuições
@@ -323,8 +375,8 @@ def beta_binomial(a, b, x, m, n):
     eixo_x = np.linspace(0, 1, 1000)
     # Calcula os valores de y para cada distribuição.
     y_priori = beta_pdf_vals(a, b)
-    y_verossimilhanca = beta_pdf_vals(round(n*x+1, 3), round(n*(m-x)+1, 3))
-    y_posteriori = beta_pdf_vals(round(n*x+a, 3), round(b+n*(m-x), 3))
+    y_verossimilhanca = beta_pdf_vals(round(n * x + 1, 3), round(n * (m - x) + 1, 3))
+    y_posteriori = beta_pdf_vals(round(n * x + a, 3), round(b + n * (m - x), 3))
     # Define os nomes para a legenda.
     nomes = {
         'priori': f'Priori: Beta({a}, {b})',
@@ -338,8 +390,8 @@ def beta_bernoulli(a, b, x, n):
     """Gera o gráfico combinado do par conjugado Beta-Bernoulli."""
     eixo_x = np.linspace(0, 1, 1000)
     y_priori = beta_pdf_vals(a, b)
-    y_verossimilhanca = beta_pdf_vals(round(n*x+1, 3), round(n*(1-x)+1, 3))
-    y_posteriori = beta_pdf_vals(round(a+n*x, 3), round(b+n*(1-x), 3))
+    y_verossimilhanca = beta_pdf_vals(round(n * x + 1, 3), round(n * (1 - x) + 1, 3))
+    y_posteriori = beta_pdf_vals(round(a + n * x, 3), round(b + n * (1 - x), 3))
     nomes = {
         'priori': f'Priori: Beta({a}, {b})',
         'verossimilhanca': 'Verossim.: Bernoulli',
@@ -351,8 +403,8 @@ def beta_geometrica(a, b, x, n):
     """Gera o gráfico combinado do par conjugado Beta-Geométrica."""
     eixo_x = np.linspace(0, 1, 1000)
     y_priori = beta_pdf_vals(a, b)
-    y_verossimilhanca = beta_pdf_vals(n+1, round(n*(x-1)+1, 3))
-    y_posteriori = beta_pdf_vals(a+n, round(b+n*(x-1), 3))
+    y_verossimilhanca = beta_pdf_vals(n + 1, round(n * (x - 1) + 1, 3))
+    y_posteriori = beta_pdf_vals(a + n, round(b + n * (x - 1), 3))
     nomes = {
         'priori': f'Priori: Beta({a}, {b})',
         'verossimilhanca': 'Verossim.: Geométrica',
@@ -364,8 +416,8 @@ def beta_binomial_negativa(a, b, x, r, n):
     """Gera o gráfico combinado do par conjugado Beta-Binomial Negativa."""
     eixo_x = np.linspace(0, 1, 1000)
     y_priori = beta_pdf_vals(a, b)
-    y_verossimilhanca = beta_pdf_vals(round(n*r+1, 3), round(n*(x-r)+1, 3))
-    y_posteriori = beta_pdf_vals(round(a+n*r, 3), round(b+n*(x-r), 3))
+    y_verossimilhanca = beta_pdf_vals(round(n * r + 1, 3), round(n * (x - r) + 1, 3))
+    y_posteriori = beta_pdf_vals(round(a + n * r, 3), round(b + n * (x - r), 3))
     nomes = {
         'priori': f'Priori: Beta({a}, {b})',
         'verossimilhanca': 'Verossim.: Binomial Negativa',
@@ -377,16 +429,16 @@ def gama_exponencial(a, b, x, n):
     """Gera o gráfico combinado do par conjugado Gama-Exponencial."""
     # Calcula os intervalos de plotagem para cada curva.
     x_min_pri, x_max_pri = gama_range(a, b)
-    x_min_ver, x_max_ver = gama_range(n+1, n*x)
-    x_min_pos, x_max_pos = gama_range(a+n, b+n*x)
+    x_min_ver, x_max_ver = gama_range(n + 1, n * x)
+    x_min_pos, x_max_pos = gama_range(a + n, b + n * x)
     # Encontra o intervalo final que engloba todas as curvas.
     x_min = min(x_min_pri, x_min_ver, x_min_pos)
     x_max = max(x_max_pri, x_max_ver, x_max_pos)
     # Gera o eixo x e as PDFs.
     eixo_x = np.linspace(x_min, x_max, 1000)
-    y_priori = gamma.pdf(eixo_x, a, scale=1/b)
-    y_verossimilhanca = gamma.pdf(eixo_x, n+1, scale=round(1/(n*x), 3))
-    y_posteriori = gamma.pdf(eixo_x, a+n, scale=round(1/(b+n*x), 3))
+    y_priori = gamma.pdf(eixo_x, a, scale=1 / b)
+    y_verossimilhanca = gamma.pdf(eixo_x, n + 1, scale=round(1 / (n * x), 3))
+    y_posteriori = gamma.pdf(eixo_x, a + n, scale=round(1 / (b + n * x), 3))
     nomes = {
         'priori': f'Priori: Gama({a}, {b})',
         'verossimilhanca': 'Verossim.: Exponencial',
@@ -397,14 +449,14 @@ def gama_exponencial(a, b, x, n):
 def gama_poisson(a, b, x, n):
     """Gera o gráfico combinado do par conjugado Gama-Poisson."""
     x_min_pri, x_max_pri = gama_range(a, b)
-    x_min_ver, x_max_ver = gama_range(n*x+1, n)
-    x_min_pos, x_max_pos = gama_range(n*x+a, b+n)
+    x_min_ver, x_max_ver = gama_range(n * x + 1, n)
+    x_min_pos, x_max_pos = gama_range(n * x + a, b + n)
     x_min = min(x_min_pri, x_min_ver, x_min_pos)
     x_max = max(x_max_pri, x_max_ver, x_max_pos)
     eixo_x = np.linspace(x_min, x_max, 1000)
-    y_priori = gamma.pdf(eixo_x, a, scale=1/b)
-    y_verossimilhanca = gamma.pdf(eixo_x, round(n*x+1, 3), scale=round(1/n, 3))
-    y_posteriori = gamma.pdf(eixo_x, round(n*x+a, 3), scale=round(1/(b+n), 3))
+    y_priori = gamma.pdf(eixo_x, a, scale=1 / b)
+    y_verossimilhanca = gamma.pdf(eixo_x, round(n * x + 1, 3), scale=round(1 / n, 3))
+    y_posteriori = gamma.pdf(eixo_x, round(n * x + a, 3), scale=round(1 / (b + n), 3))
     nomes = {
         'priori': f'Priori: Gama({a}, {b})',
         'verossimilhanca': 'Verossim.: Poisson',
@@ -415,14 +467,14 @@ def gama_poisson(a, b, x, n):
 def gama_gama(a, b, x, conhecido, n):
     """Gera o gráfico combinado do par conjugado Gama-Gama."""
     x_min_pri, x_max_pri = gama_range(a, b)
-    x_min_ver, x_max_ver = gama_range(n*conhecido+1, n*x)
-    x_min_pos, x_max_pos = gama_range(a+n*conhecido, b+n*x)
+    x_min_ver, x_max_ver = gama_range(n * conhecido + 1, n * x)
+    x_min_pos, x_max_pos = gama_range(a + n * conhecido, b + n * x)
     x_min = min(x_min_pri, x_min_ver, x_min_pos)
     x_max = max(x_max_pri, x_max_ver, x_max_pos)
     eixo_x = np.linspace(x_min, x_max, 1000)
-    y_priori = gamma.pdf(eixo_x, a, scale=1/b)
-    y_verossimilhanca = gamma.pdf(eixo_x, round(n*conhecido+1, 3), scale=round(1/(n*x), 3))
-    y_posteriori = gamma.pdf(eixo_x, round(a+n*conhecido, 3), scale=round(1/(b+n*x), 3))
+    y_priori = gamma.pdf(eixo_x, a, scale=1 / b)
+    y_verossimilhanca = gamma.pdf(eixo_x, round(n * conhecido + 1, 3), scale=round(1 / (n * x), 3))
+    y_posteriori = gamma.pdf(eixo_x, round(a + n * conhecido, 3), scale=round(1 / (b + n * x), 3))
     nomes = {
         'priori': f'Priori: Gama({a}, {b})',
         'verossimilhanca': 'Verossim.: Gama',
@@ -433,10 +485,10 @@ def gama_gama(a, b, x, conhecido, n):
 def normal_normal(mu, sigma2, x, conhecido, n):
     """Gera o gráfico combinado do par conjugado Normal-Normal."""
     x_min_pri, x_max_pri = normal_range(mu, sigma2)
-    x_min_ver, x_max_ver = normal_range(x, conhecido/n)
+    x_min_ver, x_max_ver = normal_range(x, conhecido / n)
     # Calcula os parâmetros da posteriori.
-    mu_post = (n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido)
-    sigma2_post = sigma2*conhecido/(n*sigma2+conhecido)
+    mu_post = (n * sigma2 * x + conhecido * mu) / (n * sigma2 + conhecido)
+    sigma2_post = sigma2 * conhecido / (n * sigma2 + conhecido)
     x_min_pos, x_max_pos = normal_range(mu_post, sigma2_post)
     # Encontra o intervalo final.
     x_min = min(x_min_pri, x_min_ver, x_min_pos)
@@ -444,7 +496,7 @@ def normal_normal(mu, sigma2, x, conhecido, n):
     eixo_x = np.linspace(x_min, x_max, 1000)
     # Calcula as PDFs.
     y_priori = norm.pdf(eixo_x, mu, np.sqrt(sigma2))
-    y_verossimilhanca = norm.pdf(eixo_x, x, round(np.sqrt(conhecido/n), 3))
+    y_verossimilhanca = norm.pdf(eixo_x, x, round(np.sqrt(conhecido / n), 3))
     y_posteriori = norm.pdf(eixo_x, round(mu_post, 3), round(np.sqrt(sigma2_post), 3))
     nomes = {
         'priori': f'Priori: Normal({mu}, {sigma2})',
@@ -460,27 +512,27 @@ def normal_gama_pdf(x, tau, mu, lambda_, alpha, beta_val):
     tau = np.maximum(tau, 1e-9)
     # Suprime erros de divisão por zero ou overflow que podem ocorrer nos cálculos.
     with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
-        term1 = (beta_val**alpha)
+        term1 = (beta_val ** alpha)
         term2 = np.sqrt(lambda_)
-        term3 = tau**(alpha-0.5)
-        term4 = np.exp(-beta_val*tau)
-        term5 = np.exp(-lambda_*tau*(x-mu)**2/2)
-        denominador = (math.gamma(alpha)*np.sqrt(2*np.pi))
-        densidade = (term1*term2*term3*term4*term5)/denominador
+        term3 = tau ** (alpha - 0.5)
+        term4 = np.exp(-beta_val * tau)
+        term5 = np.exp(-lambda_ * tau * (x - mu) ** 2 / 2)
+        denominador = (math.gamma(alpha) * np.sqrt(2 * np.pi))
+        densidade = (term1 * term2 * term3 * term4 * term5) / denominador
     # Converte possíveis NaNs (resultado de operações inválidas) para 0.
     return np.nan_to_num(densidade)
 
 def xvals_tauvals(mu, lambda_, alpha, beta_val):
     """Calcula os intervalos para os eixos x (mu) e y (tau) para o gráfico Normal-Gama."""
     # Valida os parâmetros e retorna um intervalo padrão se inválido.
-    if alpha<=1 or lambda_<=0 or beta_val<=0:
-        return (np.linspace(mu-3, mu+3, 100), np.linspace(0.001, 3, 100))
+    if alpha <= 1 or lambda_ <= 0 or beta_val <= 0:
+        return (np.linspace(mu - 3, mu + 3, 100), np.linspace(0.001, 3, 100))
     # Calcula a moda e desvios para centralizar o gráfico.
-    mode_tau = (alpha-0.5)/beta_val
-    desvio_x = np.sqrt(beta_val/(lambda_*(alpha-1)))
-    desvio_tau = np.sqrt(alpha/beta_val**2)
-    x_vals = np.linspace(mu-3*desvio_x, mu+3*desvio_x, 100)
-    tau_vals = np.linspace(max(mode_tau-3*desvio_tau, 0.001), mode_tau+3*desvio_tau, 100)
+    mode_tau = (alpha - 0.5) / beta_val
+    desvio_x = np.sqrt(beta_val / (lambda_ * (alpha - 1)))
+    desvio_tau = np.sqrt(alpha / beta_val ** 2)
+    x_vals = np.linspace(mu - 3 * desvio_x, mu + 3 * desvio_x, 100)
+    tau_vals = np.linspace(max(mode_tau - 3 * desvio_tau, 0.001), mode_tau + 3 * desvio_tau, 100)
     return x_vals, tau_vals
 
 def Normal_Gama_final(mu, lambda_, alpha, beta_val, x, s, n):
@@ -489,18 +541,18 @@ def Normal_Gama_final(mu, lambda_, alpha, beta_val, x, s, n):
     if any(p is None for p in [mu, lambda_, alpha, beta_val, x, s, n]):
         return go.Figure(layout={"title": "Aguardando todos os parâmetros", "template": "plotly_white"})
     # Valida os parâmetros numéricos.
-    if any(p<=0 for p in [lambda_, alpha, beta_val, n, s]) or alpha<=1 or (n-1)/2<=0:
+    if any(p <= 0 for p in [lambda_, alpha, beta_val, n, s]) or alpha <= 1 or (n - 1) / 2 <= 0:
         return go.Figure(layout={"title": "Parâmetros inválidos", "template": "plotly_white"})
 
     # Calcula os parâmetros da Posteriori.
-    mu_post = (lambda_*mu+n*x)/(lambda_+n)
-    lambda_post = lambda_+n
-    alpha_post = alpha+n/2
-    beta_post = beta_val+(n*s+(lambda_*n*(x-mu)**2)/(lambda_+n))/2
+    mu_post = (lambda_ * mu + n * x) / (lambda_ + n)
+    lambda_post = lambda_ + n
+    alpha_post = alpha + n / 2
+    beta_post = beta_val + (n * s + (lambda_ * n * (x - mu) ** 2) / (lambda_ + n)) / 2
 
     # Define os limites dos eixos para cada uma das três superfícies.
     x_priori, tau_priori = xvals_tauvals(mu, lambda_, alpha, beta_val)
-    x_vero, tau_vero = xvals_tauvals(x, n, (n-1)/2, n*s/2)
+    x_vero, tau_vero = xvals_tauvals(x, n, (n - 1) / 2, n * s / 2)
     x_post, tau_post = xvals_tauvals(mu_post, lambda_post, alpha_post, beta_post)
 
     # Encontra os limites finais que englobam todas as três superfícies.
@@ -516,23 +568,40 @@ def Normal_Gama_final(mu, lambda_, alpha, beta_val, x, s, n):
 
     # Calcula as densidades para cada superfície.
     Z_priori = normal_gama_pdf(X, T, mu, lambda_, alpha, beta_val)
-    Z_verossimilhanca = normal_gama_pdf(X, T, x, n, (n-1)/2, n*s/2)
+    Z_verossimilhanca = normal_gama_pdf(X, T, x, n, (n - 1) / 2, n * s / 2)
     Z_posteriori = normal_gama_pdf(X, T, mu_post, lambda_post, alpha_post, beta_post)
 
     # Cria o gráfico com as três superfícies.
-    fig = go.Figure(go.Surface(z=Z_priori, x=X, y=T, colorscale=COLORSCALE_BLUE, name="Priori", showscale=False))
-    fig.add_trace(go.Surface(z=Z_verossimilhanca, x=X, y=T, colorscale=COLORSCALE_RED, name="Verossimilhança", showscale=False, opacity=0.7))
-    fig.add_trace(go.Surface(z=Z_posteriori, x=X, y=T, colorscale=COLORSCALE_GREEN, name="Posteriori", showscale=False, opacity=0.7))
+    fig = go.Figure(data=go.Surface(
+        z=Z_priori, x=X, y=T, colorscale=COLORSCALE_BLUE, name="Priori", showscale=False
+    ))
+    fig.add_trace(go.Surface(
+        z=Z_verossimilhanca, x=X, y=T, colorscale=COLORSCALE_RED, name="Verossimilhança", showscale=False, opacity=0.7
+    ))
+    fig.add_trace(go.Surface(
+        z=Z_posteriori, x=X, y=T, colorscale=COLORSCALE_GREEN, name="Posteriori", showscale=False, opacity=0.7
+    ))
 
     # Adiciona "marcadores fantasma" para criar uma legenda customizada para superfícies 3D.
-    fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='blue'), name="Priori"))
-    fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='red'), name="Verossimilhança"))
-    fig.add_trace(go.Scatter3d(x=[None], y=[None], z=[None], mode='markers', marker=dict(color='green'), name="Posteriori"))
+    fig.add_trace(go.Scatter3d(
+        x=[None], y=[None], z=[None], mode='markers', marker=dict(color='blue'), name="Priori"
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[None], y=[None], z=[None], mode='markers', marker=dict(color='red'), name="Verossimilhança"
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[None], y=[None], z=[None], mode='markers', marker=dict(color='green'), name="Posteriori"
+    ))
 
     # Atualiza o layout do gráfico 3D.
     fig.update_layout(
-        title="Distribuição Normal-Gama", showlegend=True,
-        scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Densidade")
+        title="Distribuição Normal-Gama",
+        showlegend=True,
+        scene=dict(
+            xaxis_title="μ",
+            yaxis_title="τ",
+            zaxis_title="Densidade"
+        )
     )
     return fig
 
@@ -546,34 +615,78 @@ def Normal_Gama_final(mu, lambda_, alpha, beta_val, x, s, n):
 # ------------------------------------------------------------------------------
 def layout_teorema():
     """Define o layout da aba 'Teorema de Bayes'."""
-    return html.Div(className="container", children=[
-        # Título da seção.
-        html.Div(style=CARD_STYLE, children=[html.H2("Teorema de Bayes — Quadrado de Bayes (2 hipóteses)", style={'textAlign': 'center'})]),
-        # Layout em duas colunas.
-        html.Div(className="row", children=[
-            # Coluna da esquerda com os controles (sliders e inputs).
-            html.Div(className="col", children=[
-                html.Div(style=CARD_STYLE, children=[
-                    html.Label("Probabilidade a priori A:"),
-                    dcc.Slider(id='pa_slider', min=0, max=1, step=0.01, value=0.5, marks=None, tooltip={"placement": "bottom", "always_visible": True}),
-                    dcc.Input(id='pa_input', type='number', value=0.5, min=0, max=1, step=0.01, className="styled-input"),
-                    html.Hr(),
-                    html.Label("Probabilidade condicional E|A:"),
-                    dcc.Slider(id='pea_slider', min=0, max=1, step=0.01, value=0.7, marks=None, tooltip={"placement": "bottom", "always_visible": True}),
-                    dcc.Input(id='pea_input', type='number', value=0.7, min=0, max=1, step=0.01, className="styled-input"),
-                    html.Hr(),
-                    html.Label("Probabilidade condicional E|B:"),
-                    dcc.Slider(id='peb_slider', min=0, max=1, step=0.01, value=0.4, marks=None, tooltip={"placement": "bottom", "always_visible": True}),
-                    dcc.Input(id='peb_input', type='number', value=0.4, min=0, max=1, step=0.01, className="styled-input"),
-                ])
-            ]),
-            # Coluna da direita com o gráfico e o resultado.
-            html.Div(className="col", children=[
-                html.Div(style=CARD_STYLE, children=[dcc.Graph(id='bayes_graph')]),
-                html.Div(id='posterior_text', style={**CARD_STYLE, 'textAlign': 'center', 'fontWeight': 'bold'}),
-            ])
-        ])
-    ])
+    return html.Div(
+        className="container",
+        children=[
+            # Título da seção.
+            html.Div(
+                style=CARD_STYLE,
+                children=[
+                    html.H2(
+                        "Teorema de Bayes — Quadrado de Bayes (2 hipóteses)",
+                        style={'textAlign': 'center'}
+                    )
+                ]
+            ),
+            # Layout em duas colunas.
+            html.Div(
+                className="row",
+                children=[
+                    # Coluna da esquerda com os controles (sliders e inputs).
+                    html.Div(
+                        className="col",
+                        children=[
+                            html.Div(
+                                style=CARD_STYLE,
+                                children=[
+                                    html.Label("Probabilidade a priori A:"),
+                                    dcc.Slider(
+                                        id='pa_slider', min=0, max=1, step=0.01, value=0.5,
+                                        marks=None, tooltip={"placement": "bottom", "always_visible": True}
+                                    ),
+                                    dcc.Input(
+                                        id='pa_input', type='number', value=0.5,
+                                        min=0, max=1, step=0.01, className="styled-input"
+                                    ),
+                                    html.Hr(),
+                                    html.Label("Probabilidade condicional E|A:"),
+                                    dcc.Slider(
+                                        id='pea_slider', min=0, max=1, step=0.01, value=0.7,
+                                        marks=None, tooltip={"placement": "bottom", "always_visible": True}
+                                    ),
+                                    dcc.Input(
+                                        id='pea_input', type='number', value=0.7,
+                                        min=0, max=1, step=0.01, className="styled-input"
+                                    ),
+                                    html.Hr(),
+                                    html.Label("Probabilidade condicional E|B:"),
+                                    dcc.Slider(
+                                        id='peb_slider', min=0, max=1, step=0.01, value=0.4,
+                                        marks=None, tooltip={"placement": "bottom", "always_visible": True}
+                                    ),
+                                    dcc.Input(
+                                        id='peb_input', type='number', value=0.4,
+                                        min=0, max=1, step=0.01, className="styled-input"
+                                    ),
+                                ]
+                            )
+                        ]
+                    ),
+                    # Coluna da direita com o gráfico e o resultado.
+                    html.Div(
+                        className="col",
+                        children=[
+                            html.Div(style=CARD_STYLE, children=[dcc.Graph(id='bayes_graph')]),
+                            html.Div(
+                                id='posterior_text',
+                                style={**CARD_STYLE, 'textAlign': 'center', 'fontWeight': 'bold'}
+                            ),
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
 
 # ------------------------------------------------------------------------------
 # Layout da Página: Análise de Conjugadas
@@ -582,56 +695,124 @@ def layout_conjugadas():
     """Define o layout da aba 'Análise de Conjugadas'."""
     return html.Div(children=[
         # Título da seção.
-        html.Div(style=CARD_STYLE, children=[
-            html.H2('Análise de Distribuições Conjugadas', style={'textAlign': 'center'}),
-            html.P('Selecione as distribuições da Priori e do Modelo para visualizar a Posteriori resultante.', style={'textAlign': 'center'})
-        ]),
+        html.Div(
+            style=CARD_STYLE,
+            children=[
+                html.H2(
+                    'Análise de Distribuições Conjugadas',
+                    style={'textAlign': 'center'}
+                ),
+                html.P(
+                    'Selecione as distribuições da Priori e do Modelo para visualizar a Posteriori resultante.',
+                    style={'textAlign': 'center'}
+                )
+            ]
+        ),
         # Layout em duas colunas.
-        html.Div(className="row", children=[
-            # Coluna da esquerda com os painéis de controle.
-            html.Div(className="col", children=[
-                # Painel de controle da Priori.
-                html.Div(style=CARD_STYLE, children=[
-                    html.H4('Configuração da Priori'),
-                    html.Label('Distribuição da Priori:'),
-                    dcc.Dropdown(LISTA_PRIORIS, value="Beta", id="prioris"),
-                    html.Div(id="priori-params-div", style={'marginTop': '15px'}),
-                ]),
-                # Painel de controle da Verossimilhança.
-                html.Div(style=CARD_STYLE, children=[
-                    html.H4('Configuração da Verossimilhança'),
-                    html.Label('Modelo Estatístico:'),
-                    dcc.Dropdown(id="verossimilhancas"),
-                    html.Div(id="verossimilhanca-params-div", style={'marginTop': '15px'}),
-                ]),
-            ]),
-            # Coluna da direita com os gráficos individuais.
-            html.Div(className="col", children=[
-                html.Div(style=CARD_STYLE, children=[dcc.Graph(id='densidade_priori')]),
-                html.Div(style=CARD_STYLE, id='aparencia_verossimilhanca', children=[dcc.Graph(id='densidade_verossimilhanca')]),
-                html.Div(style=CARD_STYLE, children=[dcc.Graph(id='densidade_posteriori')]),
-            ])
-        ]),
+        html.Div(
+            className="row",
+            children=[
+                # Coluna da esquerda com os painéis de controle.
+                html.Div(
+                    className="col",
+                    children=[
+                        # Painel de controle da Priori.
+                        html.Div(
+                            style=CARD_STYLE,
+                            children=[
+                                html.H4('Configuração da Priori'),
+                                html.Label('Distribuição da Priori:'),
+                                dcc.Dropdown(
+                                    id="prioris",
+                                    options=LISTA_PRIORIS,
+                                    value="Beta"
+                                ),
+                                html.Div(
+                                    id="priori-params-div",
+                                    style={'marginTop': '15px'}
+                                ),
+                            ]
+                        ),
+                        # Painel de controle da Verossimilhança.
+                        html.Div(
+                            style=CARD_STYLE,
+                            children=[
+                                html.H4('Configuração da Verossimilhança'),
+                                html.Label('Modelo Estatístico:'),
+                                dcc.Dropdown(id="verossimilhancas"),
+                                html.Div(
+                                    id="verossimilhanca-params-div",
+                                    style={'marginTop': '15px'}
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                # Coluna da direita com os gráficos individuais.
+                html.Div(
+                    className="col",
+                    children=[
+                        html.Div(style=CARD_STYLE, children=[dcc.Graph(id='densidade_priori')]),
+                        html.Div(
+                            id='aparencia_verossimilhanca',
+                            style=CARD_STYLE,
+                            children=[dcc.Graph(id='densidade_verossimilhanca')]
+                        ),
+                        html.Div(style=CARD_STYLE, children=[dcc.Graph(id='densidade_posteriori')]),
+                    ]
+                )
+            ]
+        ),
         # Gráfico combinado e seção de fórmulas abaixo das colunas.
-        html.Div(style=CARD_STYLE, children=[dcc.Graph(id="grafico_conjunto")]),
-        html.Div(style=CARD_STYLE, children=[
-            html.Button("Ver Fórmulas Gerais", id="botao", n_clicks=0, className="action-button"),
-            html.Div(id="texto_formula_div")
-        ])
+        html.Div(
+            style=CARD_STYLE,
+            children=[dcc.Graph(id="grafico_conjunto")]
+        ),
+        html.Div(
+            style=CARD_STYLE,
+            children=[
+                html.Button(
+                    "Ver Fórmulas Gerais",
+                    id="botao",
+                    n_clicks=0,
+                    className="action-button"
+                ),
+                html.Div(id="texto_formula_div")
+            ]
+        )
     ])
 
 # ------------------------------------------------------------------------------
 # Layout Principal da Aplicação
 # ------------------------------------------------------------------------------
 # Define o cabeçalho da aplicação.
-header = html.Div(style=HEADER_STYLE, children=[
-    html.Img(src="/assets/logopet.png", style=LOGO_STYLE),
-    html.H1("Dashboard de Análise Bayesiana", style={'color': COLORS['text'], 'fontSize': '24px', 'margin': '0'}),
-    html.Div(style=NAV_BUTTONS_STYLE, children=[
-        html.Button("Análise de Conjugadas", id="btn-conjugadas", n_clicks=0, className="nav-button"),
-        html.Button("Teorema de Bayes", id="btn-teorema", n_clicks=0, className="nav-button")
-    ])
-])
+header = html.Div(
+    style=HEADER_STYLE,
+    children=[
+        html.Img(src="/assets/logopet.png", style=LOGO_STYLE),
+        html.H1(
+            "Dashboard de Análise Bayesiana",
+            style={'color': COLORS['text'], 'fontSize': '24px', 'margin': '0'}
+        ),
+        html.Div(
+            style=NAV_BUTTONS_STYLE,
+            children=[
+                html.Button(
+                    "Análise de Conjugadas",
+                    id="btn-conjugadas",
+                    n_clicks=0,
+                    className="nav-button"
+                ),
+                html.Button(
+                    "Teorema de Bayes",
+                    id="btn-teorema",
+                    n_clicks=0,
+                    className="nav-button"
+                )
+            ]
+        )
+    ]
+)
 
 # Define a estrutura final do layout da aplicação.
 app.layout = html.Div([
@@ -650,7 +831,10 @@ app.layout = html.Div([
 # ------------------------------------------------------------------------------
 @app.callback(
     Output("content-div", "children"),
-    [Input("btn-conjugadas", "n_clicks"), Input("btn-teorema", "n_clicks")]
+    [
+        Input("btn-conjugadas", "n_clicks"),
+        Input("btn-teorema", "n_clicks")
+    ]
 )
 def display_page(n_conjugadas, n_teorema):
     """Renderiza a página selecionada pelo usuário com base no botão clicado."""
@@ -681,8 +865,15 @@ def sync_input_pea(val): return val
 def sync_input_peb(val): return val
 
 @app.callback(
-    [Output('bayes_graph', 'figure'), Output('posterior_text', 'children')],
-    [Input('pa_input', 'value'), Input('pea_input', 'value'), Input('peb_input', 'value')]
+    [
+        Output('bayes_graph', 'figure'),
+        Output('posterior_text', 'children')
+    ],
+    [
+        Input('pa_input', 'value'),
+        Input('pea_input', 'value'),
+        Input('peb_input', 'value')
+    ]
 )
 def update_teorema(PA, PEA, PEB):
     """Atualiza o Quadrado de Bayes e os valores da posteriori."""
@@ -691,10 +882,10 @@ def update_teorema(PA, PEA, PEB):
         raise exceptions.PreventUpdate
 
     # Calcula as probabilidades a posteriori P(A|E) e P(B|E).
-    PB = 1-PA
-    denom = PEA*PA+PEB*PB
-    PAE = (PEA*PA)/denom if denom!=0 else 0
-    PBE = (PEB*PB)/denom if denom!=0 else 0
+    PB = 1 - PA
+    denom = PEA * PA + PEB * PB
+    PAE = (PEA * PA) / denom if denom != 0 else 0
+    PBE = (PEB * PB) / denom if denom != 0 else 0
 
     # Cria a figura do "Quadrado de Bayes".
     fig = go.Figure()
@@ -704,8 +895,13 @@ def update_teorema(PA, PEA, PEB):
     fig.add_shape(type="rect", x0=0, x1=PEB, y0=PA, y1=1, fillcolor="green", opacity=0.7, line_width=0)
     # Formata o gráfico.
     fig.update_layout(
-        xaxis=dict(range=[0, 1], showticklabels=False), yaxis=dict(range=[0, 1], showticklabels=False),
-        width=400, height=400, title="Quadrado de Bayes", showlegend=False, margin=dict(l=20, r=20, t=40, b=20)
+        xaxis=dict(range=[0, 1], showticklabels=False),
+        yaxis=dict(range=[0, 1], showticklabels=False),
+        width=400,
+        height=400,
+        title="Quadrado de Bayes",
+        showlegend=False,
+        margin=dict(l=20, r=20, t=40, b=20)
     )
     # Cria o texto com os resultados.
     text = f"Posterior A: {PAE:.2f} | Posterior B: {PBE:.2f}"
@@ -716,7 +912,10 @@ def update_teorema(PA, PEA, PEB):
 # ------------------------------------------------------------------------------
 
 @app.callback(
-    [Output("verossimilhancas", "options"), Output("verossimilhancas", "value")],
+    [
+        Output("verossimilhancas", "options"),
+        Output("verossimilhancas", "value")
+    ],
     Input("prioris", "value")
 )
 def update_verossimilhanca_dropdown(priori):
@@ -805,14 +1004,19 @@ def render_verossimilhanca_params(verossimilhanca):
 
     # Cria inputs para todos os parâmetros possíveis (alguns serão ocultados).
     input_x = dcc.Input(id='input-x', type='number', value=1, className="styled-input")
-    input_x_bernoulli = dcc.Input(id='input-x-bernoulli', type='number', step=0.01, min=0, max=1, value=0.5, className="styled-input")
+    input_x_bernoulli = dcc.Input(
+        id='input-x-bernoulli', type='number', step=0.01, min=0, max=1, value=0.5, className="styled-input"
+    )
     input_m = dcc.Input(id='input-m', type='number', min=1, step=1, value=10, className="styled-input")
-    input_conhecido = dcc.Input(id='input-conhecido', type='number', value=1, min=0.001, className="styled-input")
+    input_conhecido = dcc.Input(
+        id='input-conhecido', type='number', value=1, min=0.001, className="styled-input"
+    )
 
     # Caso especial para Bernoulli, que tem um input diferente para a média amostral.
     if verossimilhanca == "Bernoulli":
         return html.Div([
-            html.Label("Média amostral (0 ≤ x̄ ≤ 1):"), input_x_bernoulli,
+            html.Label("Média amostral (0 ≤ x̄ ≤ 1):"),
+            input_x_bernoulli,
             *base_inputs,
             # Oculta os inputs não utilizados.
             html.Div(input_x, style={'display': 'none'}),
@@ -850,7 +1054,10 @@ def render_verossimilhanca_params(verossimilhanca):
         hidden_inputs = [html.Div(input_m, style={'display': 'none'})]
     else:
         # Casos mais simples (Geométrica, Exponencial, Poisson).
-        hidden_inputs = [html.Div(input_m, style={'display': 'none'}), html.Div(input_conhecido, style={'display': 'none'})]
+        hidden_inputs = [
+            html.Div(input_m, style={'display': 'none'}),
+            html.Div(input_conhecido, style={'display': 'none'})
+        ]
         if verossimilhanca == "Geométrica":
             media_label = "Média amostral (x̄ ≥ 1):"
         elif verossimilhanca in ["Exponencial", "Poisson"]:
@@ -858,8 +1065,10 @@ def render_verossimilhanca_params(verossimilhanca):
 
     # Retorna a combinação de inputs visíveis e ocultos.
     return html.Div([
-        html.Label(media_label), input_x,
-        *specific_section, *base_inputs,
+        html.Label(media_label),
+        input_x,
+        *specific_section,
+        *base_inputs,
         html.Div(input_x_bernoulli, style={'display': 'none'}),
         *hidden_inputs
     ])
@@ -870,7 +1079,13 @@ def render_verossimilhanca_params(verossimilhanca):
 
 @app.callback(
     Output('densidade_priori', 'figure'),
-    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), Input("prioris","value")]
+    [
+        Input('input-a', 'value'),
+        Input('input-b', 'value'),
+        Input('input-c', 'value'),
+        Input('input-d', 'value'),
+        Input("prioris", "value")
+    ]
 )
 def update_priori_graph(a, b, c, d, prioris):
     """Atualiza o gráfico da distribuição a priori com base nos parâmetros inseridos."""
@@ -893,8 +1108,18 @@ def update_priori_graph(a, b, c, d, prioris):
     return go.Figure()
 
 @app.callback(
-    [Output('densidade_verossimilhanca', 'figure'), Output('aparencia_verossimilhanca', 'style')],
-    [Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), Input('input-tamanho','value'), Input('input-conhecido','value'), Input('verossimilhancas','value')]
+    [
+        Output('densidade_verossimilhanca', 'figure'),
+        Output('aparencia_verossimilhanca', 'style')
+    ],
+    [
+        Input('input-m', 'value'),
+        Input('input-x', 'value'),
+        Input('input-x-bernoulli', 'value'),
+        Input('input-tamanho', 'value'),
+        Input('input-conhecido', 'value'),
+        Input('verossimilhancas', 'value')
+    ]
 )
 def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhancas):
     """Atualiza o gráfico da função de verossimilhança."""
@@ -923,7 +1148,7 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhancas):
         return verossimilhanca_normal_aproximada(x, conhecido, n), style
     elif verossimilhancas == "Normal (média e precisão desconhecidas)":
         # Validação adicional de parâmetros.
-        if n<2 or conhecido<=0:
+        if n < 2 or conhecido <= 0:
             raise exceptions.PreventUpdate
         return verossimilhanca_normal_gama_aproximada(x, conhecido, n), style
     # Oculta o gráfico se nenhuma verossimilhança for válida.
@@ -931,48 +1156,72 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhancas):
 
 @app.callback(
     Output('densidade_posteriori', 'figure'),
-    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), Input('input-tamanho', 'value'), Input('input-conhecido', 'value'), Input("prioris","value"), Input("verossimilhancas","value")]
+    [
+        Input('input-a', 'value'),
+        Input('input-b', 'value'),
+        Input('input-c', 'value'),
+        Input('input-d', 'value'),
+        Input('input-m', 'value'),
+        Input('input-x', 'value'),
+        Input('input-x-bernoulli', 'value'),
+        Input('input-tamanho', 'value'),
+        Input('input-conhecido', 'value'),
+        Input("prioris", "value"),
+        Input("verossimilhancas", "value")
+    ]
 )
-def update_posterior_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas):
+def update_posterior_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas):
     """Atualiza o gráfico da distribuição a posteriori."""
     # Previne atualização se algum dos muitos inputs estiver vazio.
-    if any(p is None for p in [a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas]):
+    if any(p is None for p in [a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas]):
         raise exceptions.PreventUpdate
 
     # Seleciona a função de cálculo e plotagem da posteriori com base no modelo.
     if verossimilhancas == "Bernoulli":
-        return posteriori_beta(round(a+n*x_bernoulli, 3), round(b+n*(1-x_bernoulli), 3))
+        return posteriori_beta(round(a + n * x_bernoulli, 3), round(b + n * (1 - x_bernoulli), 3))
     elif verossimilhancas == "Binomial":
-        return posteriori_beta(round(n*x+a, 3), round(b+n*(m-x), 3))
+        return posteriori_beta(round(n * x + a, 3), round(b + n * (m - x), 3))
     elif verossimilhancas == "Geométrica":
-        return posteriori_beta(a+n, round(b+n*(x-1), 3))
+        return posteriori_beta(a + n, round(b + n * (x - 1), 3))
     elif verossimilhancas == "Binomial negativa":
-        return posteriori_beta(round(a+n*m, 3), round(b+n*(x-m), 3))
+        return posteriori_beta(round(a + n * m, 3), round(b + n * (x - m), 3))
     elif verossimilhancas == "Exponencial":
-        return posteriori_gama(a+n, round(b+n*x, 3))
+        return posteriori_gama(a + n, round(b + n * x, 3))
     elif verossimilhancas == "Poisson":
-        return posteriori_gama(round(n*x+a, 3), b+n)
+        return posteriori_gama(round(n * x + a, 3), b + n)
     elif verossimilhancas == "Gama (b desconhecido)":
-        return posteriori_gama(round(a+n*conhecido, 3), round(b+n*x, 3))
+        return posteriori_gama(round(a + n * conhecido, 3), round(b + n * x, 3))
     elif verossimilhancas == "Normal (média desconhecida)":
         # Calcula os parâmetros da posteriori Normal.
-        mu_post = (n*b*x+a*conhecido)/(n*b+conhecido)
-        sigma2_post = (conhecido*b)/(n*b+conhecido)
+        mu_post = (n * b * x + a * conhecido) / (n * b + conhecido)
+        sigma2_post = (conhecido * b) / (n * b + conhecido)
         return posteriori_normal(round(mu_post, 3), round(sigma2_post, 3))
     elif verossimilhancas == "Normal (média e precisão desconhecidas)":
         # Validação adicional.
-        if c<=1 or n<2 or conhecido<=0:
+        if c <= 1 or n < 2 or conhecido <= 0:
             raise exceptions.PreventUpdate
         return posteriori_Normal_Gama(a, b, c, d, x, conhecido, n)
     return go.Figure()
 
 @app.callback(
     Output('grafico_conjunto', 'figure'),
-    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), Input('input-tamanho', 'value'), Input('input-conhecido', 'value'), Input("prioris","value"), Input("verossimilhancas","value")]
+    [
+        Input('input-a', 'value'),
+        Input('input-b', 'value'),
+        Input('input-c', 'value'),
+        Input('input-d', 'value'),
+        Input('input-m', 'value'),
+        Input('input-x', 'value'),
+        Input('input-x-bernoulli', 'value'),
+        Input('input-tamanho', 'value'),
+        Input('input-conhecido', 'value'),
+        Input("prioris", "value"),
+        Input("verossimilhancas", "value")
+    ]
 )
-def update_final_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas):
+def update_final_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas):
     """Atualiza o gráfico combinado final com priori, verossimilhança e posteriori."""
-    if any(p is None for p in [a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas]):
+    if any(p is None for p in [a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas]):
         raise exceptions.PreventUpdate
 
     # Seleciona a função de plotagem combinada apropriada.
@@ -993,7 +1242,7 @@ def update_final_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhan
     elif verossimilhancas == "Normal (média desconhecida)":
         return normal_normal(a, b, x, conhecido, n)
     elif verossimilhancas == "Normal (média e precisão desconhecidas)":
-        if c<=1 or n<2 or conhecido<=0:
+        if c <= 1 or n < 2 or conhecido <= 0:
             raise exceptions.PreventUpdate
         return Normal_Gama_final(a, b, c, d, x, conhecido, n)
     return go.Figure()
@@ -1004,26 +1253,30 @@ def update_final_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhan
 
 @app.callback(
     Output("texto_formula_div", "children"),
-    [Input("botao", "n_clicks")],
+    Input("botao", "n_clicks"),
     # Usa 'State' para obter os valores atuais sem disparar o callback.
     [
         State("verossimilhancas", "value"),
-        State("input-a", "value"), State("input-b", "value"),
-        State("input-c", "value"), State("input-d", "value"),
-        State("input-m", "value"), State("input-x", "value"),
-        State("input-x-bernoulli", "value"), State("input-tamanho", "value"),
+        State("input-a", "value"),
+        State("input-b", "value"),
+        State("input-c", "value"),
+        State("input-d", "value"),
+        State("input-m", "value"),
+        State("input-x", "value"),
+        State("input-x-bernoulli", "value"),
+        State("input-tamanho", "value"),
         State("input-conhecido", "value")
     ]
 )
 def update_formulas(n_clicks, verossimilhancas, a, b, c, d, m, x, x_bernoulli, n, conhecido):
     """Exibe as fórmulas matemáticas (gerais ou aplicadas) ao clicar no botão."""
     # Não faz nada se o botão não foi clicado.
-    if n_clicks is None or n_clicks==0:
+    if n_clicks is None or n_clicks == 0:
         return html.Div()
 
     # Cliques ímpares (1, 3, 5...): mostram fórmulas GERAIS em LaTeX.
-    if n_clicks%2!=0:
-        if verossimilhancas=="Bernoulli":
+    if n_clicks % 2 != 0:
+        if verossimilhancas == "Bernoulli":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1035,7 +1288,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bern
 #### Posteriori:
 $p|\mathbf{X}\sim Beta(a+n\bar{x}, b+n(1-\bar{x}))$
 ''', mathjax=True)
-        elif verossimilhancas=="Binomial":
+        elif verossimilhancas == "Binomial":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1047,8 +1300,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bino
 #### Posteriori:
 $p|\mathbf{X}\sim Beta(n\bar{x}+a, b+n(m-\bar{x}))$
 ''', mathjax=True)
-        # ... (outras fórmulas gerais)
-        elif verossimilhancas=="Geométrica":
+        elif verossimilhancas == "Geométrica":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1060,7 +1312,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $\tex
 #### Posteriori:
 $p|\mathbf{X}\sim Beta(a+n, b+n(\bar{x}-1))$
 ''', mathjax=True)
-        elif verossimilhancas=="Binomial negativa":
+        elif verossimilhancas == "Binomial negativa":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1072,7 +1324,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bino
 #### Posteriori:
 $p|\mathbf{X}\sim Beta(a+nr, b+n(\bar{x}-r))$
 ''', mathjax=True)
-        elif verossimilhancas=="Exponencial":
+        elif verossimilhancas == "Exponencial":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1084,7 +1336,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Expo
 #### Posteriori:
 $\lambda|\mathbf{X}\sim Gama(a+n, b+n\bar{x})$
 ''', mathjax=True)
-        elif verossimilhancas=="Poisson":
+        elif verossimilhancas == "Poisson":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1096,7 +1348,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Pois
 #### Posteriori:
 $\lambda|\mathbf{X}\sim Gama(n\bar{x}+a, b+n)$
 ''', mathjax=True)
-        elif verossimilhancas=="Gama (b desconhecido)":
+        elif verossimilhancas == "Gama (b desconhecido)":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1108,7 +1360,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Gama
 #### Posteriori:
 $p|\mathbf{X}\sim Gama(a_0+na, b_0+n\bar{x})$
 ''', mathjax=True)
-        elif verossimilhancas=="Normal (média desconhecida)":
+        elif verossimilhancas == "Normal (média desconhecida)":
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1120,7 +1372,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Norm
 #### Posteriori:
 $\mu|\mathbf{X}\sim Normal\left( \frac{n\sigma^2_0\bar{x}+\sigma^2\mu_0}{n\sigma^2_0+\sigma^2}, \frac{\sigma^2\sigma^2_0}{n\sigma^2_0+\sigma^2}\right)$
 ''', mathjax=True)
-        else: # Normal-Gama
+        else:
             return dcc.Markdown(r'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1137,14 +1389,14 @@ $(\mu,\tau)|\mathbf{X} \sim Normal-Gama\left( \frac{\lambda\mu_0+n\bar{x}}{\lamb
     else:
         # Tenta converter todos os parâmetros para float.
         try:
-            a=float(a); b=float(b); c=float(c); d=float(d); m=float(m); x=float(x)
-            x_bernoulli=float(x_bernoulli); n=float(n); conhecido=float(conhecido)
+            a = float(a); b = float(b); c = float(c); d = float(d); m = float(m); x = float(x)
+            x_bernoulli = float(x_bernoulli); n = float(n); conhecido = float(conhecido)
         except (ValueError, TypeError):
             # Se a conversão falhar, pede para preencher os campos.
             return dcc.Markdown("Aguardando todos os parâmetros...", mathjax=True)
 
         # Gera f-strings com o código LaTeX e os valores inseridos.
-        if verossimilhancas=="Bernoulli":
+        if verossimilhancas == "Bernoulli":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1156,7 +1408,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bern
 #### Posteriori:
 $p|\mathbf{{X}}\sim Beta({a+n*x_bernoulli}, {b+n*(1-x_bernoulli)})$
 ''', mathjax=True)
-        elif verossimilhancas=="Binomial":
+        elif verossimilhancas == "Binomial":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1168,8 +1420,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bino
 #### Posteriori:
 $p|\mathbf{{X}}\sim Beta({n*x+a}, {b+n*(m-x)})$
 ''', mathjax=True)
-        # ... (outras fórmulas aplicadas)
-        elif verossimilhancas=="Geométrica":
+        elif verossimilhancas == "Geométrica":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1181,7 +1432,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $\tex
 #### Posteriori:
 $p|\mathbf{{X}} \sim Beta({a+n}, {b+n*(x-1)})$
 ''', mathjax=True)
-        elif verossimilhancas=="Binomial negativa":
+        elif verossimilhancas == "Binomial negativa":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1193,7 +1444,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bino
 #### Posteriori:
 $p|\mathbf{{X}} \sim Beta({a+n*m}, {b+n*(x-m)})$
 ''', mathjax=True)
-        elif verossimilhancas=="Exponencial":
+        elif verossimilhancas == "Exponencial":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1205,7 +1456,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Expo
 #### Posteriori:
 $\lambda|\mathbf{{X}}\sim Gama({a+n}, {b+n*x})$
 ''', mathjax=True)
-        elif verossimilhancas=="Poisson":
+        elif verossimilhancas == "Poisson":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1217,7 +1468,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Pois
 #### Posteriori:
 $\lambda|\mathbf{{X}} \sim Gama({n*x+a}, {b+n})$
 ''', mathjax=True)
-        elif verossimilhancas=="Gama (b desconhecido)":
+        elif verossimilhancas == "Gama (b desconhecido)":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1229,7 +1480,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Gama
 #### Posteriori:
 $p|\mathbf{{X}}\sim Gama({a+n*conhecido}, {b+n*x})$
 ''', mathjax=True)
-        elif verossimilhancas=="Normal (média desconhecida)":
+        elif verossimilhancas == "Normal (média desconhecida)":
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1241,7 +1492,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Norm
 #### Posteriori:
 $\mu|\mathbf{{X}}\sim Normal\left({((n*b*x+conhecido*a)/(n*b+conhecido)):.3f}, {((conhecido*b)/(n*b+conhecido)):.3f}\right)$
 ''', mathjax=True)
-        else: # Normal-Gama
+        else:
             return dcc.Markdown(fr'''
 ### Fórmulas matemáticas:
 #### Priori:
@@ -1256,12 +1507,12 @@ $(\mu,\tau)|\mathbf{{X}} \sim Normal-Gama\left({((b*a+n*x)/(b+n)):.3f}, {b+n}, {
 
 @app.callback(
     Output("botao", "children"),
-    [Input("botao", "n_clicks")]
+    Input("botao", "n_clicks")
 )
 def update_button_text(n_clicks):
     """Alterna o texto do botão de fórmulas entre 'Gerais' e 'Aplicadas'."""
     # Se o número de cliques for par (ou inicial), o próximo clique mostrará as fórmulas gerais.
-    if n_clicks is None or n_clicks%2==0:
+    if n_clicks is None or n_clicks % 2 == 0:
         return "Ver Fórmulas Gerais"
     # Se o número de cliques for ímpar, o próximo clique mostrará as fórmulas aplicadas.
     return "Aplicar valores nos campos"
