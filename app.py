@@ -503,20 +503,25 @@ def render_priori_params(priori):
     if priori == "Beta":
         return html.Div([
             html.Label("Parâmetro de forma a (> 0):"),
-            dcc.Input(id='input-a', type='number', value=2, className="styled-input"),
+            dcc.Input(id='input-a', type='number', value=2, min=0.001, className="styled-input"),
             html.Div(id='error-msg-a', className="error-message"),
             html.Label("Parâmetro de forma b (> 0):"),
-            dcc.Input(id='input-b', type='number', value=4, className="styled-input"),
+            dcc.Input(id='input-b', type='number', value=4, min=0.001, className="styled-input"),
             html.Div(id='error-msg-b', className="error-message"),
+            # Hidden inputs to maintain callback structure
+            html.Div(dcc.Input(id='input-c', value=3), style={'display':'none'}),
+            html.Div(dcc.Input(id='input-d', value=2), style={'display':'none'})
         ])
     elif priori == "Gama":
         return html.Div([
             html.Label("Parâmetro de forma α (> 0):"),
-            dcc.Input(id='input-a', type='number', value=2, className="styled-input"),
+            dcc.Input(id='input-a', type='number', value=2, min=0.001, className="styled-input"),
             html.Div(id='error-msg-a', className="error-message"),
             html.Label("Parâmetro de taxa β (> 0):"),
-            dcc.Input(id='input-b', type='number', value=4, className="styled-input"),
+            dcc.Input(id='input-b', type='number', value=4, min=0.001, className="styled-input"),
             html.Div(id='error-msg-b', className="error-message"),
+            html.Div(dcc.Input(id='input-c', value=3), style={'display':'none'}),
+            html.Div(dcc.Input(id='input-d', value=2), style={'display':'none'})
         ])
     elif priori == "Normal":
         return html.Div([
@@ -524,8 +529,10 @@ def render_priori_params(priori):
             dcc.Input(id='input-a', type='number', value=0, className="styled-input"),
             html.Div(id='error-msg-a', className="error-message"),
             html.Label("Variância da priori σ² (> 0):"),
-            dcc.Input(id='input-b', type='number', value=1, className="styled-input"),
+            dcc.Input(id='input-b', type='number', value=1, min=0.001, className="styled-input"),
             html.Div(id='error-msg-b', className="error-message"),
+            html.Div(dcc.Input(id='input-c', value=3), style={'display':'none'}),
+            html.Div(dcc.Input(id='input-d', value=2), style={'display':'none'})
         ])
     elif priori == "Normal-Gama":
         return html.Div([
@@ -533,13 +540,13 @@ def render_priori_params(priori):
             dcc.Input(id='input-a', type='number', value=0, className="styled-input"),
             html.Div(id='error-msg-a', className="error-message"),
             html.Label("Parâmetro λ da priori (> 0):"),
-            dcc.Input(id='input-b', type='number', value=1, className="styled-input"),
+            dcc.Input(id='input-b', type='number', value=1, min=0.001, className="styled-input"),
             html.Div(id='error-msg-b', className="error-message"),
             html.Label("Parâmetro de forma α (> 1):"),
-            dcc.Input(id='input-c', type='number', value=3, className="styled-input"),
+            dcc.Input(id='input-c', type='number', value=3, min=1.001, className="styled-input"),
             html.Div(id='error-msg-c', className="error-message"),
             html.Label("Parâmetro de taxa β (> 0):"),
-            dcc.Input(id='input-d', type='number', value=2, className="styled-input"),
+            dcc.Input(id='input-d', type='number', value=2, min=0.001, className="styled-input"),
             html.Div(id='error-msg-d', className="error-message"),
         ])
     return []
@@ -560,37 +567,62 @@ def render_verossimilhanca_params(verossimilhanca):
         html.Div(id='error-msg-tamanho', className="error-message"),
     ]
 
-    input_x = dcc.Input(id='input-x', type='number', value=1, className="styled-input")
-    input_x_bernoulli = dcc.Input(id='input-x-bernoulli', type='number', value=0.5, className="styled-input")
-    input_m = dcc.Input(id='input-m', type='number', value=10, className="styled-input")
-    input_conhecido = dcc.Input(id='input-conhecido', type='number', value=1, className="styled-input")
+    # Reusable input components with error divs
+    input_x = html.Div([
+        dcc.Input(id='input-x', type='number', value=1, className="styled-input"),
+        html.Div(id='error-msg-x', className="error-message")
+    ])
+    input_x_bernoulli = html.Div([
+        dcc.Input(id='input-x-bernoulli', type='number', value=0.5, className="styled-input"),
+        html.Div(id='error-msg-x-bernoulli', className="error-message")
+    ])
+    input_m = html.Div([
+        dcc.Input(id='input-m', type='number', value=10, className="styled-input"),
+        html.Div(id='error-msg-m', className="error-message")
+    ])
+    input_conhecido = html.Div([
+        dcc.Input(id='input-conhecido', type='number', value=1, className="styled-input"),
+        html.Div(id='error-msg-conhecido', className="error-message")
+    ])
+    
+    # Hide unused inputs for compatibility
+    hidden_x = html.Div(input_x, style={'display':'none'})
+    hidden_x_bernoulli = html.Div(input_x_bernoulli, style={'display':'none'})
+    hidden_m = html.Div(input_m, style={'display':'none'})
+    hidden_conhecido = html.Div(input_conhecido, style={'display':'none'})
 
     if verossimilhanca == "Bernoulli":
         return html.Div([
             html.Label("Média amostral (0 ≤ x̄ ≤ 1):"), input_x_bernoulli,
-            html.Div(id='error-msg-x-bernoulli', className="error-message"),
-            *base_inputs
+            *base_inputs,
+            hidden_x, hidden_m, hidden_conhecido
         ])
 
-    specific_section = []
+    specific_section, hidden_inputs_list = [], []
     media_label = "Média amostral (x̄):"
 
     if verossimilhanca == "Binomial":
         media_label = "Média amostral (0 ≤ x̄ ≤ m):"
-        specific_section = [html.Label("Número de ensaios (m ≥ 1):"), input_m, html.Div(id='error-msg-m', className="error-message")]
+        specific_section = [html.Label("Número de ensaios (m ≥ 1):"), input_m]
+        hidden_inputs_list = [hidden_conhecido]
     elif verossimilhanca == "Binomial negativa":
         media_label = "Média amostral (x̄ > r):"
-        specific_section = [html.Label("Número de sucessos (r ≥ 1):"), input_m, html.Div(id='error-msg-m', className="error-message")]
+        specific_section = [html.Label("Número de sucessos (r ≥ 1):"), input_m]
+        hidden_inputs_list = [hidden_conhecido]
     elif verossimilhanca == "Gama (b desconhecido)":
         media_label = "Média amostral (x̄ ≥ 0):"
-        specific_section = [html.Label("Parâmetro 'a' conhecido: (> 0)"), input_conhecido, html.Div(id='error-msg-conhecido', className="error-message")]
+        specific_section = [html.Label("Parâmetro 'a' conhecido: (> 0)"), input_conhecido]
+        hidden_inputs_list = [hidden_m]
     elif verossimilhanca == "Normal (média desconhecida)":
         media_label = "Média amostral (x̄ ∈ ℝ):"
-        specific_section = [html.Label("Variância populacional (σ²) conhecida: (> 0)"), input_conhecido, html.Div(id='error-msg-conhecido', className="error-message")]
+        specific_section = [html.Label("Variância populacional (σ²) conhecida: (> 0)"), input_conhecido]
+        hidden_inputs_list = [hidden_m]
     elif verossimilhanca == "Normal (média e precisão desconhecidas)":
         media_label = "Média amostral (x̄ ∈ ℝ):"
-        specific_section = [html.Label("Variância amostral (s² > 0):"), input_conhecido, html.Div(id='error-msg-conhecido', className="error-message")]
+        specific_section = [html.Label("Variância amostral (s² > 0):"), input_conhecido]
+        hidden_inputs_list = [hidden_m]
     else:
+        hidden_inputs_list = [hidden_m, hidden_conhecido]
         if verossimilhanca == "Geométrica":
             media_label = "Média amostral (x̄ ≥ 1):"
         elif verossimilhanca in ["Exponencial", "Poisson"]:
@@ -598,10 +630,12 @@ def render_verossimilhanca_params(verossimilhanca):
 
     return html.Div([
         html.Label(media_label), input_x,
-        html.Div(id='error-msg-x', className="error-message"),
         *specific_section,
-        *base_inputs
+        *base_inputs,
+        hidden_x_bernoulli,
+        *hidden_inputs_list
     ])
+
 
 # --- CALLBACKS DE VALIDAÇÃO VISUAL ---
 def validate_param(value, min_val=None, max_val=None, min_exclusive=False, max_exclusive=False):
@@ -627,8 +661,8 @@ def validate_param(value, min_val=None, max_val=None, min_exclusive=False, max_e
 
 @app.callback(
     [Output('input-a', 'style'), Output('error-msg-a', 'children')],
-    [Input('input-a', 'value')],
-    [State('prioris', 'value')]
+    Input('input-a', 'value'),
+    State('prioris', 'value')
 )
 def validate_input_a(value, priori):
     if priori in ["Beta", "Gama"]:
@@ -637,8 +671,8 @@ def validate_input_a(value, priori):
 
 @app.callback(
     [Output('input-b', 'style'), Output('error-msg-b', 'children')],
-    [Input('input-b', 'value')],
-    [State('prioris', 'value')]
+    Input('input-b', 'value'),
+    State('prioris', 'value')
 )
 def validate_input_b(value, priori):
     if priori in ["Beta", "Gama", "Normal", "Normal-Gama"]:
@@ -647,8 +681,9 @@ def validate_input_b(value, priori):
 
 @app.callback(
     [Output('input-c', 'style'), Output('error-msg-c', 'children')],
-    [Input('input-c', 'value')],
-    [State('prioris', 'value')]
+    Input('input-c', 'value'),
+    State('prioris', 'value'),
+    prevent_initial_call=True
 )
 def validate_input_c(value, priori):
     if priori == "Normal-Gama":
@@ -657,8 +692,9 @@ def validate_input_c(value, priori):
 
 @app.callback(
     [Output('input-d', 'style'), Output('error-msg-d', 'children')],
-    [Input('input-d', 'value')],
-    [State('prioris', 'value')]
+    Input('input-d', 'value'),
+    State('prioris', 'value'),
+    prevent_initial_call=True
 )
 def validate_input_d(value, priori):
     if priori == "Normal-Gama":
@@ -667,26 +703,28 @@ def validate_input_d(value, priori):
 
 @app.callback(
     [Output('input-tamanho', 'style'), Output('error-msg-tamanho', 'children')],
-    [Input('input-tamanho', 'value')],
-    [State('verossimilhancas', 'value')]
+    Input('input-tamanho', 'value'),
+    State('verossimilhancas', 'value')
 )
 def validate_input_tamanho(value, verossimilhanca):
-    if value is None:
-        return {'borderColor': 'red'}, 'Campo obrigatório.'
+    if verossimilhanca is None: return {'borderColor': ''}, ''
     min_val = 2 if verossimilhanca == "Normal (média e precisão desconhecidas)" else 1
     return validate_param(value, min_val=min_val)
 
 @app.callback(
     [Output('input-x-bernoulli', 'style'), Output('error-msg-x-bernoulli', 'children')],
-    [Input('input-x-bernoulli', 'value')]
+    Input('input-x-bernoulli', 'value'),
+    State('verossimilhancas', 'value')
 )
-def validate_input_x_bernoulli(value):
-    return validate_param(value, min_val=0, max_val=1)
+def validate_input_x_bernoulli(value, verossimilhanca):
+    if verossimilhanca == "Bernoulli":
+        return validate_param(value, min_val=0, max_val=1)
+    return {'borderColor': ''}, ''
 
 @app.callback(
     [Output('input-conhecido', 'style'), Output('error-msg-conhecido', 'children')],
-    [Input('input-conhecido', 'value')],
-    [State('verossimilhancas', 'value')]
+    Input('input-conhecido', 'value'),
+    State('verossimilhancas', 'value')
 )
 def validate_input_conhecido(value, verossimilhanca):
     if verossimilhanca in ["Gama (b desconhecido)", "Normal (média desconhecida)", "Normal (média e precisão desconhecidas)"]:
@@ -695,8 +733,8 @@ def validate_input_conhecido(value, verossimilhanca):
     
 @app.callback(
     [Output('input-m', 'style'), Output('error-msg-m', 'children')],
-    [Input('input-m', 'value')],
-    [State('verossimilhancas', 'value')]
+    Input('input-m', 'value'),
+    State('verossimilhancas', 'value')
 )
 def validate_input_m(value, verossimilhanca):
     if verossimilhanca in ["Binomial", "Binomial negativa"]:
@@ -706,34 +744,33 @@ def validate_input_m(value, verossimilhanca):
 @app.callback(
     [Output('input-x', 'style'), Output('error-msg-x', 'children')],
     [Input('input-x', 'value'), Input('input-m', 'value')],
-    [State('verossimilhancas', 'value')]
+    State('verossimilhancas', 'value')
 )
 def validate_input_x_and_m(x, m, verossimilhanca):
+    if verossimilhanca is None: return {'borderColor': ''}, ''
+    
     ctx = dash.callback_context
-    if not ctx.triggered:
-        return {'borderColor': ''}, ''
-        
-    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
+    if not ctx.triggered: return {'borderColor': ''}, ''
+    
     if x is None:
-        if triggered_id == 'input-x':
+        if ctx.triggered_id == 'input-x.value':
             return {'borderColor': 'red'}, 'Campo obrigatório.'
         else:
-            return dash.no_update, dash.no_update
+            return dash.no_update
     
     invalid_style = {'borderColor': 'red'}
     valid_style = {'borderColor': ''}
 
     if verossimilhanca == "Binomial":
         style, msg = validate_param(x, min_val=0)
-        if msg: return style, msg
+        if msg != '': return style, msg
         if m is not None and x > m:
             return invalid_style, f'Média (x̄) deve ser ≤ m ({m}).'
         return valid_style, ''
 
     elif verossimilhanca == "Binomial negativa":
-        style, msg = validate_param(x, min_val=0) # Base check
-        if msg: return style, msg
+        style, msg = validate_param(x, min_val=0)
+        if msg != '': return style, msg
         if m is not None and x <= m:
             return invalid_style, f'Média (x̄) deve ser > r ({m}).'
         return valid_style, ''
@@ -747,6 +784,7 @@ def validate_input_x_and_m(x, m, verossimilhanca):
     return valid_style, ''
 
 # --- FIM DOS CALLBACKS DE VALIDAÇÃO ---
+
 
 # Callbacks para Teorema de Bayes
 @app.callback(Output('pa_slider', 'value'), Input('pa_input', 'value'))
@@ -786,110 +824,110 @@ def update_teorema(PA, PEA, PEB):
 # Callbacks para atualização dos gráficos
 @app.callback(
     Output('densidade_priori', 'figure'),
-    [Input('input-a', 'value'), Input('input-b', 'value'), 
-     Input('input-c', 'value'), Input('input-d', 'value'), 
-     Input("prioris","value")]
+    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), Input("prioris","value")]
 )
 def update_priori_graph(a, b, c, d, prioris):
-    if a is None or b is None or prioris is None:
+    if any(v is None for v in [a, b, prioris]):
         return go.Figure(layout={"template": "plotly_white"})
 
     invalid_fig = go.Figure(layout={"title": "Parâmetros da Priori Inválidos", "template": "plotly_white"})
 
-    if prioris == "Gama" or prioris == "Beta":
+    if prioris == "Beta":
         if a <= 0 or b <= 0: return invalid_fig
-        return plot_gamma_distribution(a,b) if prioris == "Gama" else plot_beta_distribution(a,b)
-    elif prioris == "Normal-Gama":
-        if c is None or d is None or b <= 0 or c <= 1 or d <= 0: return invalid_fig
-        return plot_normal_gama_distribution(a,b,c,d)
+        return plot_beta_distribution(a,b)
+    elif prioris == "Gama":
+        if a <= 0 or b <= 0: return invalid_fig
+        return plot_gamma_distribution(a,b)
     elif prioris == "Normal":
         if b <= 0: return invalid_fig
         return plot_normal_distribution(a,b)
+    elif prioris == "Normal-Gama":
+        if any(v is None for v in [c, d]) or b <= 0 or c <= 1 or d <= 0: return invalid_fig
+        return plot_normal_gama_distribution(a,b,c,d)
     
     return go.Figure(layout={"template": "plotly_white"})
 
+
 @app.callback(
     [Output('densidade_verossimilhanca', 'figure'), Output('aparencia_verossimilhanca', 'style')],
-    [State('input-m', 'value'), State('input-x', 'value'), State('input-x-bernoulli','value'), 
-     State('input-tamanho','value'), State('input-conhecido','value'), 
-     Input('verossimilhancas','value'), Input('input-x', 'value'), Input('input-m', 'value')]
+    [Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), Input('input-tamanho','value'), Input('input-conhecido','value'), Input('verossimilhancas','value')]
 )
-def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhanca, *_):
+def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhanca):
     if verossimilhanca is None:
         return go.Figure(), {'display': 'none'}
 
     style = {**card_style}
     invalid_fig = go.Figure(layout={"title": "Parâmetros da Verossimilhança Inválidos", "template": "plotly_white"})
+    
+    # Check for None values common to most models
+    if n is None: return invalid_fig, style
 
-    if verossimilhanca == "Geométrica":
-        if x is None or n is None or x < 1 or n < 1: return invalid_fig, style
-        return verossimilhanca_geometrica_aproximada(x, n), style
-    elif verossimilhanca == "Bernoulli":
-        if x_bernoulli is None or n is None or not (0 <= x_bernoulli <= 1) or n < 1: return invalid_fig, style
-        return verossimilhanca_bernoulli_aproximada(x_bernoulli, n), style
-    elif verossimilhanca == "Normal (média desconhecida)":
-        if x is None or conhecido is None or n is None or conhecido <= 0 or n < 1: return invalid_fig, style
-        return verossimilhanca_normal_aproximada(x, conhecido, n), style
-    elif verossimilhanca == "Exponencial":
-        if x is None or n is None or x < 0 or n < 1: return invalid_fig, style
-        return verossimilhanca_exponencial_aproximada(x, n), style
-    elif verossimilhanca == "Binomial":
-        if x is None or m is None or n is None or not (0 <= x <= m) or n < 1 or m < 1: return invalid_fig, style
-        return verossimilhanca_binomial_aproximada(x, m, n), style
-    elif verossimilhanca == "Poisson":
-        if x is None or n is None or x < 0 or n < 1: return invalid_fig, style
-        return verossimilhanca_poisson_aproximada(x, n), style
-    elif verossimilhanca == "Binomial negativa":
-        if x is None or m is None or n is None or x <= m or n < 1 or m < 1: return invalid_fig, style
-        return verossimilhanca_binomial_negativa_aproximada(x, m, n), style
-    elif verossimilhanca == "Gama (b desconhecido)":
-        if x is None or conhecido is None or n is None or x < 0 or conhecido <= 0 or n < 1: return invalid_fig, style
-        return verossimilhanca_gama_aproximada(x, conhecido, n), style
-    elif verossimilhanca == "Normal (média e precisão desconhecidas)":
-        if x is None or conhecido is None or n is None or n < 2 or conhecido <= 0: return invalid_fig, style
-        return verossimilhanca_normal_gama_aproximada(x, conhecido, n), style
-    else:
-        return go.Figure(), {'display': 'none'}
+    if verossimilhanca=="Geométrica":
+        if x is None or x < 1 or n < 1: return invalid_fig, style
+        return verossimilhanca_geometrica_aproximada(x,n), style
+    elif verossimilhanca=="Bernoulli":
+        if x_bernoulli is None or not (0 <= x_bernoulli <= 1) or n < 1: return invalid_fig, style
+        return verossimilhanca_bernoulli_aproximada(x_bernoulli,n), style
+    elif verossimilhanca=="Normal (média desconhecida)":
+        if x is None or conhecido is None or conhecido <= 0 or n < 1: return invalid_fig, style
+        return verossimilhanca_normal_aproximada(x,conhecido,n), style
+    elif verossimilhanca=="Exponencial":
+        if x is None or x < 0 or n < 1: return invalid_fig, style
+        return verossimilhanca_exponencial_aproximada(x,n), style
+    elif verossimilhanca=="Binomial":
+        if x is None or m is None or not (0 <= x <= m) or n < 1 or m < 1: return invalid_fig, style
+        return verossimilhanca_binomial_aproximada(x,m,n), style
+    elif verossimilhanca=="Poisson":
+        if x is None or x < 0 or n < 1: return invalid_fig, style
+        return verossimilhanca_poisson_aproximada(x,n), style
+    elif verossimilhanca=="Binomial negativa":
+        if x is None or m is None or x <= m or n < 1 or m < 1: return invalid_fig, style
+        return verossimilhanca_binomial_negativa_aproximada(x,m,n), style
+    elif verossimilhanca=="Gama (b desconhecido)":
+        if x is None or conhecido is None or x < 0 or conhecido <= 0 or n < 1: return invalid_fig, style
+        return verossimilhanca_gama_aproximada(x,conhecido,n), style
+    elif verossimilhancas=="Normal (média e precisão desconhecidas)":
+        if x is None or conhecido is None or n < 2 or conhecido <= 0: return invalid_fig, style
+        return verossimilhanca_normal_gama_aproximada(x,conhecido,n), style
+    else: return go.Figure(), {'display': 'none'}
+
 
 def validate_all_params(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas):
+    # Check for None values based on which inputs should exist
     if any(p is None for p in [a, b, n, prioris, verossimilhancas]): return False
+    
+    if prioris == "Normal-Gama" and any(p is None for p in [c, d]): return False
+    
+    if verossimilhancas == "Bernoulli" and x_bernoulli is None: return False
+    if verossimilhancas in ["Binomial", "Binomial negativa"] and (x is None or m is None): return False
+    if verossimilhancas in ["Geométrica", "Exponencial", "Poisson"] and x is None: return False
+    if verossimilhancas in ["Gama (b desconhecido)", "Normal (média desconhecida)", "Normal (média e precisão desconhecidas)"] and (x is None or conhecido is None): return False
 
+
+    # Priori validation
     if prioris == "Beta" and (a <= 0 or b <= 0): return False
     if prioris == "Gama" and (a <= 0 or b <= 0): return False
     if prioris == "Normal" and b <= 0: return False
-    if prioris == "Normal-Gama":
-        if any(p is None for p in [c, d]) or b <= 0 or c <= 1 or d <= 0: return False
+    if prioris == "Normal-Gama" and (b <= 0 or c <= 1 or d <= 0): return False
 
-    if verossimilhancas == "Bernoulli":
-        if x_bernoulli is None or not (0 <= x_bernoulli <= 1) or n < 1: return False
-    elif verossimilhancas == "Binomial":
-        if x is None or m is None or not (0 <= x <= m) or n < 1 or m < 1: return False
-    elif verossimilhancas == "Geométrica":
-        if x is None or x < 1 or n < 1: return False
-    elif verossimilhancas == "Binomial negativa":
-        if x is None or m is None or x <= m or n < 1 or m < 1: return False
-    elif verossimilhancas == "Exponencial":
-        if x is None or x < 0 or n < 1: return False
-    elif verossimilhancas == "Poisson":
-        if x is None or x < 0 or n < 1: return False
-    elif verossimilhancas == "Gama (b desconhecido)":
-        if x is None or conhecido is None or x < 0 or conhecido <= 0 or n < 1: return False
-    elif verossimilhancas == "Normal (média desconhecida)":
-        if x is None or conhecido is None or conhecido <= 0 or n < 1: return False
-    elif verossimilhancas == "Normal (média e precisão desconhecidas)":
-        if x is None or conhecido is None or n < 2 or conhecido <= 0: return False
+    # Likelihood validation
+    if verossimilhancas == "Bernoulli" and (not (0 <= x_bernoulli <= 1) or n < 1): return False
+    if verossimilhancas == "Binomial" and (not (0 <= x <= m) or n < 1 or m < 1): return False
+    if verossimilhancas == "Geométrica" and (x < 1 or n < 1): return False
+    if verossimilhancas == "Binomial negativa" and (x <= m or n < 1 or m < 1): return False
+    if verossimilhancas in ["Exponencial", "Poisson"] and (x < 0 or n < 1): return False
+    if verossimilhancas == "Gama (b desconhecido)" and (x < 0 or conhecido <= 0 or n < 1): return False
+    if verossimilhancas == "Normal (média desconhecida)" and (conhecido <= 0 or n < 1): return False
+    if verossimilhancas == "Normal (média e precisão desconhecidas)" and (n < 2 or conhecido <= 0): return False
     
     return True
 
 @app.callback(
     Output('densidade_posteriori', 'figure'),
-    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), 
-     Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), 
-     Input('input-tamanho', 'value'), Input('input-conhecido', 'value'), 
-     Input("prioris","value"), Input("verossimilhancas","value")]
+    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), Input('input-tamanho', 'value'), Input('input-conhecido', 'value'), Input("prioris","value"), Input("verossimilhancas","value")]
 )
 def update_posterior_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas):
-    if not validate_all_params(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas):
+    if not validate_all_params(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas):
         return go.Figure(layout={"title": "Parâmetros Inválidos", "template": "plotly_white"})
 
     if verossimilhancas=="Binomial": return posteriori_beta(round(n*x+a,3),round(b+n*(m-x),3))
@@ -901,14 +939,12 @@ def update_posterior_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimi
     elif verossimilhancas=="Binomial negativa": return posteriori_beta(round(a+n*m,3),round(b+n*(x-m),3))
     elif verossimilhancas=="Normal (média e precisão desconhecidas)":
         return posteriori_Normal_Gama(a,b,c,d,x,conhecido,n)
-    else: return posteriori_normal(round((n*b*x+a*conhecido)/(n*b+conhecido),3),round(conhecido*b/(n*b+conhecido),3))
+    else: # Normal (média desconhecida)
+        return posteriori_normal(round((n*b*x+a*conhecido)/(n*b+conhecido),3),round(conhecido*b/(n*b+conhecido),3))
 
 @app.callback(
     Output('grafico_conjunto', 'figure'),
-    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), 
-     Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), 
-     Input('input-tamanho', 'value'), Input('input-conhecido', 'value'), 
-     Input("prioris","value"), Input("verossimilhancas","value")]
+    [Input('input-a', 'value'), Input('input-b', 'value'), Input('input-c', 'value'), Input('input-d', 'value'), Input('input-m', 'value'), Input('input-x', 'value'), Input('input-x-bernoulli','value'), Input('input-tamanho', 'value'), Input('input-conhecido', 'value'), Input("prioris","value"), Input("verossimilhancas","value")]
 )
 def update_final_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas):
     if not validate_all_params(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhancas):
@@ -923,7 +959,8 @@ def update_final_graph(a,b,c,d,m,x,x_bernoulli,n,conhecido,prioris,verossimilhan
     elif verossimilhancas=="Gama (b desconhecido)": return gama_gama(a,b,x,conhecido,n)
     elif verossimilhancas=="Normal (média e precisão desconhecidas)":
         return Normal_Gama_final(a,b,c,d,x,conhecido,n)
-    else: return normal_normal(a,b,x,conhecido,n)
+    else: # Normal (média desconhecida)
+        return normal_normal(a,b,x,conhecido,n)
 
 # CORREÇÃO: Lógica de exibição das fórmulas copiada IDÊNTICAMENTE do código original de referência
 @app.callback(
