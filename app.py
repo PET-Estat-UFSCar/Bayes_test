@@ -844,13 +844,9 @@ def render_verossimilhanca_params(verossimilhanca):
 # ------------------------------------------------------------------------------
 def validate_param(value, min_val=None, max_val=None, min_exclusive=False, max_exclusive=False):
     """
-    Função auxiliar para validar um parâmetro e gerar a mensagem de erro apropriada.
-    Agora, a mensagem de erro é baseada na restrição, mesmo se o campo estiver vazio.
+    Função auxiliar para validar um parâmetro.
+    Retorna uma tupla: (é_valido: bool, mensagem_de_erro: str)
     """
-    invalid_style = {'borderColor': 'red'}
-    valid_style = {'borderColor': ''}
-
-    # Gera a mensagem de erro com base nas restrições
     error_message = ""
     if min_val is not None and max_val is not None:
         op_min = ">" if min_exclusive else "≥"
@@ -863,109 +859,132 @@ def validate_param(value, min_val=None, max_val=None, min_exclusive=False, max_e
         op = "<" if max_exclusive else "≤"
         error_message = f"Valor deve ser {op} {max_val}."
 
-    # Valida o valor
     if value is None:
-        return invalid_style, error_message
+        return False, error_message
 
     if min_val is not None:
-        if min_exclusive and value <= min_val: return invalid_style, error_message
-        if not min_exclusive and value < min_val: return invalid_style, error_message
+        if min_exclusive and value <= min_val: return False, error_message
+        if not min_exclusive and value < min_val: return False, error_message
     if max_val is not None:
-        if max_exclusive and value >= max_val: return invalid_style, error_message
-        if not max_exclusive and value > max_val: return invalid_style, error_message
+        if max_exclusive and value >= max_val: return False, error_message
+        if not max_exclusive and value > max_val: return False, error_message
             
-    return valid_style, ''
+    return True, ""
 
 @app.callback(
-    [Output('input-a', 'style'), Output('error-msg-a', 'children')],
+    [Output('input-a', 'className'), Output('error-msg-a', 'children')],
     Input('input-a', 'value'), State('prioris', 'value'), prevent_initial_call=True)
 def validate_input_a(value, priori):
-    if priori in ["Beta", "Gama"]: return validate_param(value, min_val=0, min_exclusive=True)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if priori in ["Beta", "Gama"]:
+        is_valid, message = validate_param(value, min_val=0, min_exclusive=True)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-b', 'style'), Output('error-msg-b', 'children')],
+    [Output('input-b', 'className'), Output('error-msg-b', 'children')],
     Input('input-b', 'value'), State('prioris', 'value'), prevent_initial_call=True)
 def validate_input_b(value, priori):
-    if priori in ["Beta", "Gama", "Normal", "Normal-Gama"]: return validate_param(value, min_val=0, min_exclusive=True)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if priori in ["Beta", "Gama", "Normal", "Normal-Gama"]:
+        is_valid, message = validate_param(value, min_val=0, min_exclusive=True)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-c', 'style'), Output('error-msg-c', 'children')],
+    [Output('input-c', 'className'), Output('error-msg-c', 'children')],
     Input('input-c', 'value'), State('prioris', 'value'), prevent_initial_call=True)
 def validate_input_c(value, priori):
-    if priori == "Normal-Gama": return validate_param(value, min_val=1, min_exclusive=True)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if priori == "Normal-Gama":
+        is_valid, message = validate_param(value, min_val=1, min_exclusive=True)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-d', 'style'), Output('error-msg-d', 'children')],
+    [Output('input-d', 'className'), Output('error-msg-d', 'children')],
     Input('input-d', 'value'), State('prioris', 'value'), prevent_initial_call=True)
 def validate_input_d(value, priori):
-    if priori == "Normal-Gama": return validate_param(value, min_val=0, min_exclusive=True)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if priori == "Normal-Gama":
+        is_valid, message = validate_param(value, min_val=0, min_exclusive=True)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-tamanho', 'style'), Output('error-msg-tamanho', 'children')],
+    [Output('input-tamanho', 'className'), Output('error-msg-tamanho', 'children')],
     Input('input-tamanho', 'value'), State('verossimilhancas', 'value'), prevent_initial_call=True)
 def validate_input_tamanho(value, verossimilhanca):
-    if verossimilhanca is None: return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if verossimilhanca is None: return base_class, ""
     min_val = 2 if verossimilhanca == "Normal (média e precisão desconhecidas)" else 1
-    return validate_param(value, min_val=min_val)
+    is_valid, message = validate_param(value, min_val=min_val)
+    if not is_valid:
+        return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-x-bernoulli', 'style'), Output('error-msg-x-bernoulli', 'children')],
+    [Output('input-x-bernoulli', 'className'), Output('error-msg-x-bernoulli', 'children')],
     Input('input-x-bernoulli', 'value'), State('verossimilhancas', 'value'), prevent_initial_call=True)
 def validate_input_x_bernoulli(value, verossimilhanca):
-    if verossimilhanca == "Bernoulli": return validate_param(value, min_val=0, max_val=1)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if verossimilhanca == "Bernoulli":
+        is_valid, message = validate_param(value, min_val=0, max_val=1)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-conhecido', 'style'), Output('error-msg-conhecido', 'children')],
+    [Output('input-conhecido', 'className'), Output('error-msg-conhecido', 'children')],
     Input('input-conhecido', 'value'), State('verossimilhancas', 'value'), prevent_initial_call=True)
 def validate_input_conhecido(value, verossimilhanca):
-    if verossimilhanca in ["Gama (b desconhecido)", "Normal (média desconhecida)", "Normal (média e precisão desconhecidas)"]: return validate_param(value, min_val=0, min_exclusive=True)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if verossimilhanca in ["Gama (b desconhecido)", "Normal (média desconhecida)", "Normal (média e precisão desconhecidas)"]:
+        is_valid, message = validate_param(value, min_val=0, min_exclusive=True)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
     
 @app.callback(
-    [Output('input-m', 'style'), Output('error-msg-m', 'children')],
+    [Output('input-m', 'className'), Output('error-msg-m', 'children')],
     Input('input-m', 'value'), State('verossimilhancas', 'value'), prevent_initial_call=True)
 def validate_input_m(value, verossimilhanca):
-    if verossimilhanca == "Binomial negativa": return validate_param(value, min_val=1)
-    return {'borderColor': ''}, ''
+    base_class = "styled-input"
+    if verossimilhanca == "Binomial negativa":
+        is_valid, message = validate_param(value, min_val=1)
+        if not is_valid:
+            return f"{base_class} is-invalid", message
+    return base_class, ""
 
 @app.callback(
-    [Output('input-x', 'style'), Output('error-msg-x', 'children')],
+    [Output('input-x', 'className'), Output('error-msg-x', 'children')],
     [Input('input-x', 'value'), Input('input-m', 'value')],
     State('verossimilhancas', 'value'), prevent_initial_call=True)
 def validate_input_x_and_m(x, m, verossimilhanca):
-    if verossimilhanca is None: return {'borderColor': ''}, ''
-    
-    ctx = callback_context
-    if not ctx.triggered: return {'borderColor': ''}, ''
-    
-    invalid_style = {'borderColor': 'red'}
-    valid_style = {'borderColor': ''}
+    base_class = "styled-input"
+    if verossimilhanca is None: return base_class, ""
 
-    # Lógica para quando o campo 'x' está vazio
-    if x is None:
-        msg = ''
-        if verossimilhanca == "Binomial negativa": msg = "Valor deve ser > r."
-        elif verossimilhanca == "Geométrica": msg = "Valor deve ser ≥ 1."
-        elif verossimilhanca in ["Exponencial", "Poisson", "Gama (b desconhecido)"]: msg = "Valor deve ser ≥ 0."
-        return invalid_style, msg
-
-    # Lógica para quando o campo 'x' tem um valor
+    # Validação para Binomial Negativa (depende de 'm')
     if verossimilhanca == "Binomial negativa":
-        style, msg = validate_param(x, min_val=0);
-        if msg != '': return style, msg
-        if m is not None and x <= m: return invalid_style, f'Média (x̄) deve ser > r ({m}).'
-    elif verossimilhanca == "Geométrica":
-        return validate_param(x, min_val=1)
-    elif verossimilhanca in ["Exponencial", "Poisson", "Gama (b desconhecido)"]:
-        return validate_param(x, min_val=0)
+        is_valid, message = validate_param(x, min_val=m, min_exclusive=True)
+        if not is_valid:
+            msg = f"Média (x̄) deve ser > r ({m})." if m is not None and x is not None else "Valor deve ser > r."
+            return f"{base_class} is-invalid", msg
 
-    return valid_style, ''
-    
+    # Validações para outros modelos que usam 'input-x'
+    elif verossimilhanca == "Geométrica":
+        is_valid, message = validate_param(x, min_val=1)
+        if not is_valid: return f"{base_class} is-invalid", message
+    elif verossimilhanca in ["Exponencial", "Poisson", "Gama (b desconhecido)"]:
+        is_valid, message = validate_param(x, min_val=0)
+        if not is_valid: return f"{base_class} is-invalid", message
+
+    return base_class, ""
+
 # ------------------------------------------------------------------------------
 # 5.4: Callbacks de Sincronização (Página Teorema de Bayes)
 # ------------------------------------------------------------------------------
@@ -986,15 +1005,8 @@ def sync_input_peb(val): return val
 # 5.5: Callbacks de Atualização dos Gráficos
 # ------------------------------------------------------------------------------
 @app.callback(
-    [
-        Output('bayes_graph', 'figure'),
-        Output('posterior_text', 'children')
-    ],
-    [
-        Input('pa_input', 'value'),
-        Input('pea_input', 'value'),
-        Input('peb_input', 'value')
-    ]
+    [Output('bayes_graph', 'figure'), Output('posterior_text', 'children')],
+    [Input('pa_input', 'value'), Input('pea_input', 'value'), Input('peb_input', 'value')]
 )
 def update_teorema(PA, PEA, PEB):
     """Atualiza o gráfico e o texto do Teorema de Bayes."""
@@ -1166,18 +1178,204 @@ def update_formulas(n_clicks, verossimilhancas, a, b, c, d, m, x, x_bernoulli, n
     
     if n_clicks % 2 != 0:
         if verossimilhancas=="Bernoulli":
-            return dcc.Markdown(r'''...''', mathjax=True)
-        # O restante do código das fórmulas foi omitido para manter a resposta concisa,
-        # mas ele está presente no código final que você está executando.
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$p \sim Beta(a,b)$
+$f(p)=\frac{\Gamma(a+b) p^{a-1}(1-p)^{b-1}}{\Gamma(a)\Gamma(b)}\mathbb{I}_{(0,1)}(p)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bernoulli(p)$
+#### Verossimilhança: $L(p|\mathbf{X})=p^{n\bar{x}}(1-p)^{(n-1)\bar{x}}$
+#### Posteriori:
+$p|\mathbf{X}\sim Beta(a+n\bar{x}, b+n(1-\bar{x}))$
+''', mathjax=True)
+        elif verossimilhancas=="Geométrica":
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$p \sim Beta(a,b)$
+$f(p)=\frac{\Gamma(a+b) p^{a-1}(1-p)^{b-1}}{\Gamma(a)\Gamma(b)}\mathbb{I}_{(0,1)}(p)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $\text{Geométrica}(p)$
+#### Verossimilhança: $L(p|\mathbf{X})=p^n(1-p)^{n(\bar{x}-1)}$
+#### Posteriori:
+$p|\mathbf{X}\sim Beta(a + n, b+n(\bar{x} - 1))$
+''', mathjax=True)
+        elif verossimilhancas=="Binomial negativa":
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$p \sim Beta(a,b)$
+$f(p)=\frac{\Gamma(a+b) p^{a-1}(1-p)^{b-1}}{\Gamma(a)\Gamma(b)}\mathbb{I}_{(0,1)}(p)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Binomial Negativa(r, p)$
+#### Verossimilhança: $L(p|\mathbf{X})=\left( \prod_{i=1}^n  \binom{x_i-1}{r-1} \right) p^{nr}(1-p)^{n(\bar{x}-r)}$
+#### Posteriori:
+$p|\mathbf{X}\sim Beta(a + nr, b+n(\bar{x} - r))$
+''', mathjax=True)
+        elif verossimilhancas=="Exponencial":
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$\lambda \sim Gama(a,b)$
+$f(\lambda)=\frac{b^a \lambda^{a - 1} e^{-b \lambda}}{\Gamma(a)} \mathbb{I}_{(0, \infty)}(\lambda)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Exponencial(\lambda)$
+#### Verossimilhança: $L(\lambda|\mathbf{X})=\lambda^ne^{-\lambda n\bar{x}}$
+#### Posteriori:
+$\lambda|\mathbf{X}\sim Gama(a+n, b+n\bar{x})$
+''', mathjax=True)
+        elif verossimilhancas=="Poisson":
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$\lambda \sim Gama(a,b)$
+$f(\lambda)=\frac{b^a \lambda^{a - 1} e^{-b \lambda}}{\Gamma(a)} \mathbb{I}_{(0, \infty)}(\lambda)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Poisson(\lambda)$
+#### Verossimilhança: $L(\lambda|\mathbf{X})= \frac{e^{-\lambda}\lambda^{n\bar{x}}}{\prod_{i=1}^n x_i!}$
+#### Posteriori:
+$\lambda|\mathbf{X}\sim Gama(n\bar{x}+a, b+n)$
+''', mathjax=True)
+        elif verossimilhancas=="Gama (b desconhecido)":
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$b \sim Gama(a_0,b_0)$
+$f(b)=\frac{b_0^{a_0} b^{a_0 - 1} e^{-b_0 b}}{\Gamma(a_0)} \mathbb{I}_{(0, \infty)}(b)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Gama(a,b)$
+#### Verossimilhança: $L(b|\mathbf{X})=\frac{\left( \prod_{i=1}^n x_i \right)^{a-1} b^{na}e^{-nb\bar{x}}}{\Gamma(a)}$
+#### Posteriori:
+$p|\mathbf{X}\sim Gama(a_0 + na, b_0 + n \bar{x})$
+''', mathjax=True)
+        elif verossimilhancas=="Normal (média desconhecida)":
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$\mu \sim Normal(\mu_0,\sigma^2_0)$
+$f(\mu) = \frac{1}{\sqrt{2\pi\sigma^2_0}} \exp\left( -\frac{(\mu - \mu_0)^2}{2\sigma^2_0} \right) \mathbb{I}_{(-\infty, \infty)}(\mu)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Normal \left(\mu,\sigma^2 \right)$
+#### Verossimilhança: $L(\mu|\mathbf{X}) = \left(\frac{1}{\sqrt{2\pi\sigma^2}}\right)^n \exp\left(-\frac{1}{2\sigma^2}\left(n\mu^2-2\mu n\bar{x} + \sum_{i=1}^{n} x_i^2\right)\right)$
+#### Posteriori:
+$\mu|\mathbf{X}\sim Normal\left( \frac{n \sigma^2_0 \bar{x} + \sigma^2 \mu_0}{n \sigma^2_0 + \sigma^2} \,,\, \frac{\sigma^2 \sigma^2_0}{n \sigma^2_0 + \sigma^2}\right)$
+''', mathjax=True)
+        else:
+            return dcc.Markdown(r'''
+### Fórmulas matemáticas:
+#### Priori:
+$(\mu,\tau) \sim Normal-Gama(\mu_0,\lambda,a,b)$
+$f(\mu,\tau)=\frac{b^a \sqrt{\lambda}\tau^{a-0.5}e^{-b\tau}} {\Gamma{(a)}\sqrt{2\pi}} exp\left( \frac{\lambda \tau \left( \mu-\mu_0 \right)^2}{2} \right)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Normal(\mu,\tau^{-1})$
+#### Verossimilhança: $L(\mu,\tau|\mathbf{X})=\frac{1}{(\sqrt{2\pi})^n}\tau^{\frac{n}{2}}exp(\frac{-ns^2\tau}{2})exp \left( \frac{-n\tau \left( \mu-\bar{x} \right)^2}{2} \right)$
+#### Posteriori:
+$(\mu,\tau)|\mathbf{X} \sim Normal-Gama\left( \frac{\lambda\mu_0 + n\bar{x}}{\lambda+n}, \lambda+n, a+\frac{n}{2}, b+\frac{1}{2}\left( ns^2 + \frac{\lambda n \left( \bar{x} - \mu_0 \right)^2}{\lambda+n} \right) \right)$
+''', mathjax=True)
     else:
         try:
             a=float(a); b=float(b); c=float(c); d=float(d); m=float(m); x=float(x)
             x_bernoulli=float(x_bernoulli); n=float(n); conhecido=float(conhecido)
         except (ValueError, TypeError):
             return dcc.Markdown("Aguardando todos os parâmetros...", mathjax=True)
+
         if verossimilhancas=="Bernoulli":
-            return dcc.Markdown(fr'''...''', mathjax=True)
-        # O restante do código das fórmulas foi omitido para manter a resposta concisa.
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$p \sim Beta({a},{b})$
+$f(p)=\frac{{\Gamma({a+b}) p^{{{a-1}}}(1-p)^{{{b-1}}}}}{{\Gamma({a})\Gamma({b})}}\mathbb{{I}}_{{(0,1)}}(p)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Bernoulli(p)$
+#### Verossimilhança: $L(p|\mathbf{{X}})=p^{{{n*x_bernoulli}}}(1-p)^{{{n*(1-x_bernoulli)}}}$
+#### Posteriori:
+$p|\mathbf{{X}}\sim Beta({a+n*x_bernoulli}, {b+n*(1-x_bernoulli)})$
+''', mathjax=True)
+        elif verossimilhancas=="Geométrica":
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$p \sim Beta({a},{b})$
+$f(p)=\frac{{\Gamma({a+b}) p^{{{a-1}}}(1-p)^{{{b-1}}}}}{{\Gamma({a})\Gamma({b})}}\mathbb{{I}}_{{(0,1)}}(p)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $\text{{Geométrica}}(p)$
+#### Verossimilhança: $L(p|\mathbf{{X}})=p^{n}(1-p)^{{{n*(x-1)}}}$
+#### Posteriori:
+$p|\mathbf{{X}} \sim Beta({a + n}, {b+n*(x - 1)})$
+''', mathjax=True)
+        elif verossimilhancas=="Binomial negativa":
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$p \sim Beta({a},{b})$
+$f(p)=\frac{{\Gamma({a+b}) p^{{{a-1}}}(1-p)^{{{b-1}}}}}{{\Gamma({a})\Gamma({b})}}\mathbb{{I}}_{{(0,1)}}(p)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Binomial Negativa({m}, p)$
+#### Verossimilhança: $L(p|\mathbf{{X}})=\left( \prod_{{i=1}}^{n}  \binom{{x_i-1}}{{{m-1}}} \right) p^{{{n*m}}}(1-p)^{{{n*(x-m)}}}$
+#### Posteriori:
+$p|\mathbf{{X}} \sim Beta({a + n*m}, {b+n*(x - m)})$
+''', mathjax=True)
+        elif verossimilhancas=="Exponencial":
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$\lambda \sim Gama({a},{b})$
+$f(\lambda)=\frac{{{b**a} \lambda^{{{a - 1}}} e^{{- {b} \lambda}}}}{{\Gamma({a})}} \mathbb{{I}}_{{(0, \infty)}}(\lambda)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Exponencial(\lambda)$
+#### Verossimilhança: $L(\lambda|\mathbf{{X}})=\lambda^{n}e^{{- {n*x} \lambda }}$
+#### Posteriori:
+$\lambda|\mathbf{{X}}\sim Gama({a+n}, {b+n*x})$
+''', mathjax=True)
+        elif verossimilhancas=="Poisson":
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$\lambda \sim Gama({a},{b})$
+$f(\lambda)=\frac{{{b**a} \lambda^{{{a - 1}}} e^{{- {b} \lambda}}}}{{\Gamma({a})}} \mathbb{{I}}_{{(0, \infty)}}(\lambda)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Poisson(\lambda)$
+#### Verossimilhança: $L(\lambda|\mathbf{{X}})= \frac{{e^{{-\lambda}}\lambda^{{{n*x}}}}}{{\prod_{{i=1}}^{n} x_i!}}$
+#### Posteriori:
+$\lambda|\mathbf{{X}} \sim Gama({n*x+a}, {b+n})$
+''', mathjax=True)
+        elif verossimilhancas=="Gama (b desconhecido)":
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$b \sim Gama({a},{b})$
+$f(b)=\frac{{{b**a} b^{{{a - 1}}} e^{{- {b} b}}}}{{\Gamma({a})}} \mathbb{{I}}_{{(0, \infty)}}(b)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Gama({conhecido},b)$
+#### Verossimilhança: $L(b|\mathbf{{X}})=\frac{{\left( \prod_{{i=1}}^{n} x_i \right)^{{{conhecido-1}}} b^{{{n*conhecido}}}e^{{- {n*x} b}}}}{{\Gamma({conhecido})}}$
+#### Posteriori:
+$p|\mathbf{{X}}\sim Gama({a + n*conhecido}, {b + n*x})$
+''', mathjax=True)
+        elif verossimilhancas=="Normal (média desconhecida)":
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$\mu \sim Normal({a},{b})$
+$f(\mu) = \frac{{1}}{{\sqrt{{2\cdot{b}\pi}}}} \exp\left( -\frac{{(\mu - {a})^2}}{{2\cdot{b}}} \right) \mathbb{{I}}_{{(-\infty, \infty)}}(\mu)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Normal \left(\mu,{conhecido} \right)$
+#### Verossimilhança: $L(\mu|\mathbf{{X}}) = \left(\frac{{1}}{{\sqrt{{2\cdot{conhecido}\pi}}}}\right)^{n} \exp\left(-\frac{{1}}{{2\cdot{conhecido}}}\left({n} \mu^2- {2*n*x} \mu  + \sum_{{i=1}}^{n} x_i^2\right)\right)$
+#### Posteriori:
+$\mu|\mathbf{{X}}\sim Normal\left( {((n*b*x + conhecido*a)/(n*b + conhecido)):.3f} \,,\, {((conhecido*b)/(n*b + conhecido)):.3f}\right)$
+''', mathjax=True)
+        else:
+            return dcc.Markdown(fr'''
+### Fórmulas matemáticas:
+#### Priori:
+$(\mu,\tau) \sim Normal-Gama({a},{b},{c},{d})$
+$f(\mu,\tau)=\frac{{{d**c} \sqrt{{{b}}}\tau^{{{c-0.5}}}e^{{- {d} \tau}}}} {{\Gamma{{({c})}}\sqrt{{2\pi}}}} exp\left( \frac{{{b} \tau \left( \mu-{a} \right)^2}}{{2}} \right)$
+#### Modelo estatístico:
+$X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Normal(\mu,\tau^{{-1}})$
+#### Verossimilhança: $L(\mu,\tau|\mathbf{{X}})=\frac{{1}}{{(\sqrt{{2\pi}})^{n}}}\tau^{{{n/2}}}exp(\frac{{- {n*conhecido} \tau}}{{2}})exp \left( \frac{{- {n} \tau \left( \mu-{x} \right)^2}}{{2}} \right)$
+#### Posteriori:
+$(\mu,\tau)|\mathbf{{X}} \sim Normal-Gama\left( {((b*a+n*x)/(b+n)):.3f}, {b+n}, {c+n/2},{(d +0.5*(n*conhecido + (b*n*(x-a)**2)/(b+n))):.3f} \right)$
+''', mathjax=True)
         
 @app.callback(
     Output("botao", "children"),
