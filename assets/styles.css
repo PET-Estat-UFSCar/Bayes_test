@@ -69,13 +69,25 @@ body {
     margin-top: 5px;
     margin-bottom: 5px;
     font-size: 16px;
-    transition: border-color 0.2s ease-in-out;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-/* NOVA CLASSE ADICIONADA PARA MENSAGENS DE ERRO */
+/* Remove o outline padrão do foco para um estilo consistente */
+.styled-input:focus {
+    outline: none;
+}
+
+/* NOVA CLASSE PARA MENSAGENS DE ERRO */
 .error-message {
     color: red;
     font-size: 12px;
     min-height: 18px; /* Reserva espaço para evitar que o layout "pule" */
     margin-bottom: 5px;
+}
+
+/* NOVA CLASSE PARA ESTILO DE INPUT INVÁLIDO */
+/* Aplica um estilo que imita o padrão do navegador (borda e brilho vermelhos) */
+.is-invalid {
+    border-color: #dc3545 !important; /* Cor vermelha para a borda */
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Efeito de brilho */
 }
