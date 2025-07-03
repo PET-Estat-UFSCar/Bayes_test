@@ -39,7 +39,13 @@ def plot_beta_distribution(a, b, v="Priori"):
             }
         )
     theta = np.linspace(0, 1, 1000)
-    beta_pdf = beta.pdf(theta, a, b)
+
+    # CORREÇÃO: Adicionado o caso especial para Beta(1, 1) para garantir uma linha reta.
+    if a == 1 and b == 1:
+        beta_pdf = np.ones_like(theta)
+    else:
+        beta_pdf = beta.pdf(theta, a, b)
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -371,7 +377,7 @@ def gama_gama(a, b, x, conhecido, n):
     y_posteriori = gamma.pdf(eixo_x, round(a + n * conhecido, 3), scale=round(1 / (b + n * x), 3))
     figura = go.Figure()
     figura.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Gama({a}, {b})', line=dict(color='royalblue', width=2)))
-    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Gama', line=dict(color='red', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name=f'Verossim.: Gama({round(n*conhecido+1,3)}, {round(n*x,3)})', line=dict(color='red', width=2)))
     figura.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Gama({round(a+n*conhecido,3)}, {round(b+n*x,3)})', line=dict(color='green', width=2)))
     figura.update_layout(title='Distribuição Gama-Gama', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white', showlegend=True)
     return figura
@@ -389,7 +395,7 @@ def normal_normal(mu, sigma2, x, conhecido, n):
     y_posteriori = norm.pdf(eixo_x, round((n * sigma2 * x + conhecido * mu) / (n * sigma2 + conhecido), 3), round(np.sqrt(sigma2 * conhecido / (n * sigma2 + conhecido)), 3))
     figura = go.Figure()
     figura.add_trace(go.Scatter(x=eixo_x, y=y_priori, mode='lines', name=f'Priori: Normal({mu}, {sigma2})', line=dict(color='royalblue', width=2)))
-    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name='Verossim.: Normal', line=dict(color='red', width=2)))
+    figura.add_trace(go.Scatter(x=eixo_x, y=y_verossimilhanca, mode='lines', name=f'Verossim.: Normal({x}, {round(conhecido/n,3)})', line=dict(color='red', width=2)))
     figura.add_trace(go.Scatter(x=eixo_x, y=y_posteriori, mode='lines', name=f'Posteriori: Normal({round((n*sigma2*x+conhecido*mu)/(n*sigma2+conhecido),3)}, {round(sigma2*conhecido/(n*sigma2+conhecido),3)})', line=dict(color='green', width=2)))
     figura.update_layout(title='Distribuição Normal-Normal', xaxis_title='Suporte do parâmetro', yaxis_title='Densidade', template='plotly_white')
     return figura
@@ -440,6 +446,8 @@ def Normal_Gama_final(mu, lambda_, alpha, beta, x, s, n):
 def beta_pdf(a, b):
     """Calcula a densidade da distribuição Beta."""
     if a <= 0 or b <= 0: return np.zeros(1000)
+    if a == 1 and b == 1:
+        return np.ones(1000)
     theta = np.linspace(0, 1, 1000)
     return beta.pdf(theta, a, b)
 
@@ -968,14 +976,12 @@ def validate_input_x_and_m(x, m, verossimilhanca):
     base_class = "styled-input"
     if verossimilhanca is None: return base_class, ""
 
-    # Validação para Binomial Negativa (depende de 'm')
     if verossimilhanca == "Binomial negativa":
         is_valid, message = validate_param(x, min_val=m, min_exclusive=True)
         if not is_valid:
             msg = f"Média (x̄) deve ser > r ({m})." if m is not None and x is not None else "Valor deve ser > r."
             return f"{base_class} is-invalid", msg
-
-    # Validações para outros modelos que usam 'input-x'
+            
     elif verossimilhanca == "Geométrica":
         is_valid, message = validate_param(x, min_val=1)
         if not is_valid: return f"{base_class} is-invalid", message
@@ -984,7 +990,7 @@ def validate_input_x_and_m(x, m, verossimilhanca):
         if not is_valid: return f"{base_class} is-invalid", message
 
     return base_class, ""
-
+    
 # ------------------------------------------------------------------------------
 # 5.4: Callbacks de Sincronização (Página Teorema de Bayes)
 # ------------------------------------------------------------------------------
@@ -1005,8 +1011,15 @@ def sync_input_peb(val): return val
 # 5.5: Callbacks de Atualização dos Gráficos
 # ------------------------------------------------------------------------------
 @app.callback(
-    [Output('bayes_graph', 'figure'), Output('posterior_text', 'children')],
-    [Input('pa_input', 'value'), Input('pea_input', 'value'), Input('peb_input', 'value')]
+    [
+        Output('bayes_graph', 'figure'),
+        Output('posterior_text', 'children')
+    ],
+    [
+        Input('pa_input', 'value'),
+        Input('pea_input', 'value'),
+        Input('peb_input', 'value')
+    ]
 )
 def update_teorema(PA, PEA, PEB):
     """Atualiza o gráfico e o texto do Teorema de Bayes."""
