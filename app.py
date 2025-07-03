@@ -1963,97 +1963,72 @@ def render_verossimilhanca_params(verossimilhanca):
 
     # Configurações padrão e condicionais para outros modelos.
 
-    specific_section, hidden_inputs = [], []
+    specific_section, hidden_inputs, additional_info = [], [], None
 
     media_label = "Média amostral (x̄):"
 
 
     if verossimilhanca == "Binomial":
 
-        # Requer o número de ensaios 'm'.
-
         specific_section = [html.Label("Número de ensaios (m):"), input_m]
-
         hidden_inputs = [html.Div(input_conhecido, style={'display': 'none'})]
 
     elif verossimilhanca == "Binomial negativa":
-
         media_label = "Média amostral (x̄ > r):"
-
-        # Requer o número de sucessos 'r'.
-
         specific_section = [html.Label("Número de sucessos (r):"), input_m]
-
         hidden_inputs = [html.Div(input_conhecido, style={'display': 'none'})]
+        additional_info = html.P("Atenção: A média amostral (x̄) deve ser maior ou igual ao número de sucessos (r).",
+                                 style={'color': 'red', 'fontSize': 'small'})
 
     elif verossimilhanca == "Gama (b desconhecido)":
-
         media_label = "Média amostral (x̄ ≥ 0):"
-
-        # Requer o parâmetro 'a' conhecido.
-
-        specific_section = [html.Label("Parâmetro 'a' conhecido:"), input_conhecido]
-
+        # CORREÇÃO APLICADA: Adicionado (>0) ao rótulo
+        specific_section = [html.Label("Parâmetro 'a' conhecido (>0):"), input_conhecido]
         hidden_inputs = [html.Div(input_m, style={'display': 'none'})]
+        additional_info = html.P("Atenção: A média amostral (x̄) deve ser maior ou igual a 0.",
+                                 style={'color': 'red', 'fontSize': 'small'})
 
     elif verossimilhanca == "Normal (média desconhecida)":
-
         media_label = "Média amostral (x̄ ∈ ℝ):"
-
-        # Requer a variância 'σ²' conhecida.
-
-        specific_section = [html.Label("Variância populacional (σ²) conhecida:"), input_conhecido]
-
+        # CORREÇÃO APLICADA: Adicionado (>0) ao rótulo
+        specific_section = [html.Label("Variância populacional (σ²) conhecida (>0):"), input_conhecido]
         hidden_inputs = [html.Div(input_m, style={'display': 'none'})]
 
     elif verossimilhanca == "Normal (média e precisão desconhecidas)":
-
         media_label = "Média amostral (x̄ ∈ ℝ):"
-
-        # Requer a variância amostral 's²'.
-
         specific_section = [html.Label("Variância amostral (s² > 0):"), input_conhecido]
-
         hidden_inputs = [html.Div(input_m, style={'display': 'none'})]
 
     else:
-
-        # Casos mais simples (Geométrica, Exponencial, Poisson).
-
         hidden_inputs = [
-
             html.Div(input_m, style={'display': 'none'}),
-
             html.Div(input_conhecido, style={'display': 'none'})
-
         ]
-
         if verossimilhanca == "Geométrica":
-
             media_label = "Média amostral (x̄ ≥ 1):"
+            additional_info = html.P("Atenção: A média amostral (x̄) deve ser maior ou igual a 1.",
+                                     style={'color': 'red', 'fontSize': 'small'})
 
-        elif verossimilhanca in ["Exponencial", "Poisson"]:
-
+        elif verossimilhanca == "Poisson":
             media_label = "Média amostral (x̄ ≥ 0):"
+            additional_info = html.P("Atenção: A média amostral (x̄) deve ser maior ou igual a 0.",
+                                     style={'color': 'red', 'fontSize': 'small'})
 
-
-    # Retorna a combinação de inputs visíveis e ocultos.
-
-    return html.Div([
-
+    # Monta o layout final com os componentes
+    final_layout = [
         html.Label(media_label),
-
         input_x,
-
         *specific_section,
-
-        *base_inputs,
-
+    ]
+    if additional_info:
+        final_layout.append(additional_info)
+    final_layout.extend(base_inputs)
+    final_layout.extend([
         html.Div(input_x_bernoulli, style={'display': 'none'}),
-
         *hidden_inputs
-
     ])
+
+    return html.Div(final_layout)
 
 
 # ------------------------------------------------------------------------------
@@ -2164,6 +2139,26 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhancas):
     # Estilo padrão do card (visível).
 
     style = {**CARD_STYLE}
+    
+    # Adicionando validações de parâmetros
+    error_fig = go.Figure(layout={"template": "plotly_white"})
+    show_error = False
+
+    if verossimilhancas == "Binomial negativa" and x < m:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) não pode ser menor que sucessos (r).")
+        show_error = True
+    elif verossimilhancas == "Geométrica" and x < 1:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Geométrica deve ser ≥ 1.")
+        show_error = True
+    elif verossimilhancas == "Poisson" and x < 0:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Poisson deve ser ≥ 0.")
+        show_error = True
+    elif verossimilhancas == "Gama (b desconhecido)" and x < 0:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Gama deve ser ≥ 0.")
+        show_error = True
+
+    if show_error:
+        return error_fig, style
 
     # Chama a função de plotagem apropriada para a verossimilhança.
 
@@ -2180,11 +2175,7 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhancas):
         return verossimilhanca_geometrica_aproximada(x, n), style
 
     elif verossimilhancas == "Binomial negativa":
-        # CORREÇÃO APLICADA: Validação para impedir x < r
-        if x is not None and m is not None and x < m:
-            fig = go.Figure(layout={"title": "Erro: Média amostral (x̄) não pode ser menor que sucessos (r).",
-                                     "template": "plotly_white"})
-            return fig, style
+
         return verossimilhanca_binomial_negativa_aproximada(x, m, n), style
 
     elif verossimilhancas == "Exponencial":
@@ -2204,8 +2195,6 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhancas):
         return verossimilhanca_normal_aproximada(x, conhecido, n), style
 
     elif verossimilhancas == "Normal (média e precisão desconhecidas)":
-
-        # Validação adicional de parâmetros.
 
         if n < 2 or conhecido <= 0:
 
@@ -2254,12 +2243,28 @@ def update_posterior_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris,
 
     """Atualiza o gráfico da distribuição a posteriori."""
 
-    # Previne atualização se algum dos muitos inputs estiver vazio.
-
     if any(p is None for p in [a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas]):
-
         raise exceptions.PreventUpdate
 
+    # Adicionando validações de parâmetros
+    error_fig = go.Figure(layout={"template": "plotly_white"})
+    show_error = False
+
+    if verossimilhancas == "Binomial negativa" and x < m:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) não pode ser menor que sucessos (r).")
+        show_error = True
+    elif verossimilhancas == "Geométrica" and x < 1:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Geométrica deve ser ≥ 1.")
+        show_error = True
+    elif verossimilhancas == "Poisson" and x < 0:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Poisson deve ser ≥ 0.")
+        show_error = True
+    elif verossimilhancas == "Gama (b desconhecido)" and x < 0:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Gama deve ser ≥ 0.")
+        show_error = True
+
+    if show_error:
+        return error_fig
 
     # Seleciona a função de cálculo e plotagem da posteriori com base no modelo.
 
@@ -2276,10 +2281,7 @@ def update_posterior_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris,
         return posteriori_beta(a + n, round(b + n * (x - 1), 3))
 
     elif verossimilhancas == "Binomial negativa":
-        # CORREÇÃO APLICADA: Validação para impedir x < r
-        if x is not None and m is not None and x < m:
-            return go.Figure(layout={"title": "Erro: Média amostral (x̄) não pode ser menor que sucessos (r).",
-                                     "template": "plotly_white"})
+
         return posteriori_beta(round(a + n * m, 3), round(b + n * (x - m), 3))
 
     elif verossimilhancas == "Exponencial":
@@ -2296,8 +2298,6 @@ def update_posterior_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris,
 
     elif verossimilhancas == "Normal (média desconhecida)":
 
-        # Calcula os parâmetros da posteriori Normal.
-
         mu_post = (n * b * x + a * conhecido) / (n * b + conhecido)
 
         sigma2_post = (conhecido * b) / (n * b + conhecido)
@@ -2305,8 +2305,6 @@ def update_posterior_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris,
         return posteriori_normal(round(mu_post, 3), round(sigma2_post, 3))
 
     elif verossimilhancas == "Normal (média e precisão desconhecidas)":
-
-        # Validação adicional.
 
         if c <= 1 or n < 2 or conhecido <= 0:
 
@@ -2354,9 +2352,27 @@ def update_final_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, ver
     """Atualiza o gráfico combinado final com priori, verossimilhança e posteriori."""
 
     if any(p is None for p in [a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, verossimilhancas]):
-
         raise exceptions.PreventUpdate
 
+    # Adicionando validações de parâmetros
+    error_fig = go.Figure(layout={"template": "plotly_white"})
+    show_error = False
+
+    if verossimilhancas == "Binomial negativa" and x < m:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) não pode ser menor que sucessos (r).")
+        show_error = True
+    elif verossimilhancas == "Geométrica" and x < 1:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Geométrica deve ser ≥ 1.")
+        show_error = True
+    elif verossimilhancas == "Poisson" and x < 0:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Poisson deve ser ≥ 0.")
+        show_error = True
+    elif verossimilhancas == "Gama (b desconhecido)" and x < 0:
+        error_fig.update_layout(title="Erro: Média amostral (x̄) para Gama deve ser ≥ 0.")
+        show_error = True
+
+    if show_error:
+        return error_fig
 
     # Seleciona a função de plotagem combinada apropriada.
 
@@ -2373,10 +2389,7 @@ def update_final_graph(a, b, c, d, m, x, x_bernoulli, n, conhecido, prioris, ver
         return beta_geometrica(a, b, x, n)
 
     elif verossimilhancas == "Binomial negativa":
-        # CORREÇÃO APLICADA: Validação para impedir x < r
-        if x is not None and m is not None and x < m:
-            return go.Figure(layout={"title": "Erro: Média amostral (x̄) não pode ser menor que sucessos (r).",
-                                     "template": "plotly_white"})
+
         return beta_binomial_negativa(a, b, x, m, n)
 
     elif verossimilhancas == "Exponencial":
@@ -2750,6 +2763,7 @@ $p|\mathbf{{X}}\sim Beta({n*x+a}, {b+n*(m-x)})$
 
         elif verossimilhancas == "Geométrica":
 
+            if x < 1: return dcc.Markdown("Erro: Média amostral (x̄) para Geométrica deve ser ≥ 1.")
             return dcc.Markdown(fr'''
 
 ### Fórmulas matemáticas:
@@ -2773,9 +2787,8 @@ $p|\mathbf{{X}} \sim Beta({a+n}, {b+n*(x-1)})$
 ''', mathjax=True)
 
         elif verossimilhancas == "Binomial negativa":
-            # CORREÇÃO APLICADA: Validação para impedir x < r antes de mostrar a fórmula
-            if x is not None and m is not None and x < m:
-                return dcc.Markdown("Erro: Média amostral (x̄) não pode ser menor que o número de sucessos (r).")
+
+            if x < m: return dcc.Markdown("Erro: Média amostral (x̄) não pode ser menor que o número de sucessos (r).")
             return dcc.Markdown(fr'''
 
 ### Fórmulas matemáticas:
@@ -2824,6 +2837,7 @@ $\lambda|\mathbf{{X}}\sim Gama({a+n}, {b+n*x})$
 
         elif verossimilhancas == "Poisson":
 
+            if x < 0: return dcc.Markdown("Erro: Média amostral (x̄) para Poisson deve ser ≥ 0.")
             return dcc.Markdown(fr'''
 
 ### Fórmulas matemáticas:
@@ -2848,6 +2862,7 @@ $\lambda|\mathbf{{X}} \sim Gama({n*x+a}, {b+n})$
 
         elif verossimilhancas == "Gama (b desconhecido)":
 
+            if x < 0: return dcc.Markdown("Erro: Média amostral (x̄) para Gama deve ser ≥ 0.")
             return dcc.Markdown(fr'''
 
 ### Fórmulas matemáticas:
