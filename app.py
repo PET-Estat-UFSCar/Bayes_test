@@ -3,9 +3,11 @@
 # ==============================================================================
 # SEÇÃO 1: IMPORTAÇÕES
 # ==============================================================================
-# Importa as bibliotecas necessárias para a aplicação.
-# numpy para cálculos numéricos, plotly para gráficos, scipy para funções estatísticas,
-# e dash para a criação do dashboard interativo.
+# Importa as bibliotecas necessárias para a aplicação:
+# - numpy: para cálculos numéricos eficientes.
+# - plotly.graph_objects: para a criação de figuras e gráficos interativos.
+# - scipy.stats: para utilizar funções de densidade de probabilidade (PDFs).
+# - dash: para a criação do dashboard web interativo e seus componentes.
 import math
 import numpy as np
 import plotly.graph_objects as go
@@ -17,7 +19,9 @@ import dash
 # ==============================================================================
 # SEÇÃO 2: INICIALIZAÇÃO DA APLICAÇÃO DASH
 # ==============================================================================
+# Cria a instância principal da aplicação Dash.
 app = Dash(__name__)
+# Expõe o servidor Flask para implantação.
 server = app.server
 
 
@@ -30,17 +34,23 @@ server = app.server
 # ------------------------------------------------------------------------------
 
 def plot_beta_distribution(a, b, v="Priori"):
-    """Cria um gráfico da distribuição Beta."""
+    """
+    Cria e retorna uma figura Plotly com o gráfico da distribuição Beta.
+
+    Args:
+        a (float): Parâmetro de forma 'a' da distribuição Beta.
+        b (float): Parâmetro de forma 'b' da distribuição Beta.
+        v (str): Rótulo para o título do gráfico (ex: "Priori", "Posteriori").
+
+    Returns:
+        go.Figure: Objeto de figura Plotly com o gráfico.
+    """
     if a <= 0 or b <= 0:
-        return go.Figure(
-            layout={
-                "title": "Parâmetros a e b devem ser > 0",
-                "template": "plotly_white"
-            }
-        )
+        return go.Figure(layout={"title": "Parâmetros a e b devem ser > 0", "template": "plotly_white"})
+    
     theta = np.linspace(0, 1, 1000)
 
-    # CORREÇÃO: Adicionado o caso especial para Beta(1, 1) para garantir uma linha reta.
+    # Caso especial para Beta(1, 1), que é uma Uniforme(0, 1).
     if a == 1 and b == 1:
         beta_pdf = np.ones_like(theta)
     else:
@@ -66,22 +76,31 @@ def plot_beta_distribution(a, b, v="Priori"):
     return fig
 
 def plot_gamma_distribution(a, b, v="Priori"):
-    """Cria um gráfico da distribuição Gama."""
+    """
+    Cria e retorna uma figura Plotly com o gráfico da distribuição Gama.
+
+    Args:
+        a (float): Parâmetro de forma 'a' da distribuição Gama.
+        b (float): Parâmetro de taxa 'b' da distribuição Gama.
+        v (str): Rótulo para o título do gráfico (ex: "Priori", "Posteriori").
+
+    Returns:
+        go.Figure: Objeto de figura Plotly com o gráfico.
+    """
     if a <= 0 or b <= 0:
-        return go.Figure(
-            layout={
-                "title": "Parâmetros a e b devem ser > 0",
-                "template": "plotly_white"
-            }
-        )
+        return go.Figure(layout={"title": "Parâmetros a e b devem ser > 0", "template": "plotly_white"})
+    
+    # Define um intervalo de plotagem razoável em torno da moda.
     if a > 1:
         mode = (a - 1) / b
     else:
         mode = 0
     x_min = max(0, mode - 3 * np.sqrt(a / b**2))
     x_max = mode + 3 * np.sqrt(a / b**2)
-    x = np.linspace(x_min + 1e-9, x_max, 1000)
+    x = np.linspace(x_min + 1e-9, x_max, 1000) # Adiciona epsilon para evitar x=0
+    
     gamma_pdf = gamma.pdf(x, a, scale=1/b)
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -102,17 +121,24 @@ def plot_gamma_distribution(a, b, v="Priori"):
     return fig
 
 def plot_normal_distribution(mu, sigma2, v="Priori"):
-    """Cria um gráfico da distribuição Normal."""
+    """
+    Cria e retorna uma figura Plotly com o gráfico da distribuição Normal.
+
+    Args:
+        mu (float): Média da distribuição Normal.
+        sigma2 (float): Variância da distribuição Normal.
+        v (str): Rótulo para o título do gráfico (ex: "Priori", "Posteriori").
+
+    Returns:
+        go.Figure: Objeto de figura Plotly com o gráfico.
+    """
     if sigma2 <= 0:
-        return go.Figure(
-            layout={
-                "title": "Variância deve ser > 0",
-                "template": "plotly_white"
-            }
-        )
+        return go.Figure(layout={"title": "Variância deve ser > 0", "template": "plotly_white"})
+    
     sigma = np.sqrt(sigma2)
     x = np.linspace(mu - 4 * sigma, mu + 4 * sigma, 1000)
     normal_pdf = norm.pdf(x, mu, sigma)
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -133,21 +159,33 @@ def plot_normal_distribution(mu, sigma2, v="Priori"):
     return fig
 
 def plot_normal_gama_distribution(mu, lambda_, alpha, beta, cor, v="Priori"):
-    """Cria um gráfico de superfície 3D da distribuição Normal-Gama."""
+    """
+    Cria e retorna uma figura Plotly com o gráfico 3D da distribuição Normal-Gama.
+
+    Args:
+        mu (float): Parâmetro de localização.
+        lambda_ (float): Parâmetro de escala.
+        alpha (float): Parâmetro de forma.
+        beta (float): Parâmetro de taxa.
+        cor (list): Escala de cores para o gráfico de superfície.
+        v (str): Rótulo para o título do gráfico.
+
+    Returns:
+        go.Figure: Objeto de figura Plotly com o gráfico 3D.
+    """
     if alpha <= 1 or lambda_ <= 0 or beta <= 0:
-        return go.Figure(
-            layout={
-                "title": f"Parâmetros Inválidos para {v} Normal-Gama",
-                "template": "plotly_white"
-            }
-        )
+        return go.Figure(layout={"title": f"Parâmetros Inválidos para {v} Normal-Gama", "template": "plotly_white"})
+    
+    # Define o intervalo de plotagem em torno da moda de cada parâmetro.
     mode_tau = (alpha - 0.5) / beta
     desvio_x = np.sqrt(beta / (lambda_ * (alpha - 1)))
     desvio_tau = np.sqrt(alpha / beta**2)
     x_vals = np.linspace(mu - 3 * desvio_x, mu + 3 * desvio_x, 100)
     tau_vals = np.linspace(max(mode_tau - 3 * desvio_tau, 0.001), mode_tau + 3 * desvio_tau, 100)
+    
     X, T = np.meshgrid(x_vals, tau_vals)
     Z = normal_gama_pdf(X, T, mu, lambda_, alpha, beta)
+
     fig = go.Figure(data=[go.Surface(z=Z, x=X, y=T, colorscale=cor)])
     fig.update_layout(
         title=f"{v} Normal-Gama({round(mu,3)}, {round(lambda_,3)}, {round(alpha,3)}, {round(beta,3)})",
@@ -164,11 +202,7 @@ def verossimilhanca_poisson_aproximada(x, n):
     figura = plot_gamma_distribution(round(n * x + 1, 3), n)
     figura.data[0].name = 'Verossim.: Poisson'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Poisson",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Poisson", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_binomial_negativa_aproximada(x, r, n):
@@ -176,11 +210,7 @@ def verossimilhanca_binomial_negativa_aproximada(x, r, n):
     figura = plot_beta_distribution(round(n * r + 1, 3), round(n * (x - r) + 1, 3))
     figura.data[0].name = 'Verossim.: Binomial Negativa'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Binomial negativa",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Binomial negativa", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_gama_aproximada(x, a, n):
@@ -188,11 +218,7 @@ def verossimilhanca_gama_aproximada(x, a, n):
     figura = plot_gamma_distribution(round(n * a + 1, 3), round(n * x, 3))
     figura.data[0].name = 'Verossim.: Gama'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Gama",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Gama", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_exponencial_aproximada(x, n):
@@ -200,11 +226,7 @@ def verossimilhanca_exponencial_aproximada(x, n):
     figura = plot_gamma_distribution(n + 1, round(n * x, 3))
     figura.data[0].name = 'Verossim.: Exponencial'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Exponencial",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Exponencial", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_normal_aproximada(x, sigma2, n):
@@ -212,11 +234,7 @@ def verossimilhanca_normal_aproximada(x, sigma2, n):
     figura = plot_normal_distribution(x, round(sigma2 / n, 3))
     figura.data[0].name = 'Verossim.: Normal'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Normal",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Normal", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_bernoulli_aproximada(x, n):
@@ -224,11 +242,7 @@ def verossimilhanca_bernoulli_aproximada(x, n):
     figura = plot_beta_distribution(round(n * x + 1, 3), round(n * (1 - x) + 1, 3))
     figura.data[0].name = 'Verossim.: Bernoulli'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Bernoulli",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Bernoulli", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_geometrica_aproximada(x, n):
@@ -236,11 +250,7 @@ def verossimilhanca_geometrica_aproximada(x, n):
     figura = plot_beta_distribution(n + 1, round(n * (x - 1) + 1, 3))
     figura.data[0].name = 'Verossim.: Geométrica'
     figura.data[0].line.color = 'red'
-    figura.update_layout(
-        title="Verossimilhança reescalada da Geométrica",
-        yaxis_title="Verossimilhança",
-        showlegend=True
-    )
+    figura.update_layout(title="Verossimilhança reescalada da Geométrica", yaxis_title="Verossimilhança", showlegend=True)
     return figura
 
 def verossimilhanca_normal_gama_aproximada(x, s, n):
@@ -248,10 +258,7 @@ def verossimilhanca_normal_gama_aproximada(x, s, n):
     alpha_vero = (n - 1) / 2
     beta_vero = n * s / 2
     figura = plot_normal_gama_distribution(x, n, alpha_vero, beta_vero, colorscale_red, "Verossimilhança")
-    figura.update_layout(
-        title="Verossimilhança aproximada da Normal",
-        scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Verossimilhança")
-    )
+    figura.update_layout(title="Verossimilhança aproximada da Normal", scene=dict(xaxis_title="μ", yaxis_title="τ", zaxis_title="Verossimilhança"))
     return figura
 
 # ------------------------------------------------------------------------------
@@ -466,7 +473,7 @@ def normal_pdf(mu, sigma2):
     return mu - 4 * sigma, mu + 4 * sigma
 
 def normal_gama_pdf(x, tau, mu, lambda_, alpha, beta):
-    """Calcula a densidade da distribuição Normal-Gama."""
+    """Calcula a densidade da distribuição Normal-Gama de forma robusta."""
     tau = np.maximum(tau, 1e-9)
     with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
         term1 = (beta**alpha)
@@ -510,30 +517,23 @@ colors = {
     'light_grey': '#E9ECEF'
 }
 header_style = {
-    "backgroundColor": "white",
-    "padding": "20px",
-    "textAlign": "center",
-    "borderBottom": f"1px solid {colors['light_grey']}",
-    "display": "flex",
-    "alignItems": "center",
-    "justifyContent": "space-between",
+    "backgroundColor": "white", "padding": "20px", "textAlign": "center",
+    "borderBottom": f"1px solid {colors['light_grey']}", "display": "flex",
+    "alignItems": "center", "justifyContent": "space-between",
     "boxShadow": "0 2px 4px rgba(0,0,0,0.05)"
 }
 logo_style = {"height": "60px"}
 nav_buttons_style = {"display": "flex", "gap": "15px"}
 main_content_style = {
-    "padding": "30px",
-    "backgroundColor": colors['background'],
+    "padding": "30px", "backgroundColor": colors['background'],
     "fontFamily": "Roboto, sans-serif"
 }
 card_style = {
-    "backgroundColor": "white",
-    "padding": "20px",
-    "borderRadius": "10px",
-    "boxShadow": "0 2px 4px rgba(0,0,0,0.05)",
-    "marginBottom": "20px"
+    "backgroundColor": "white", "padding": "20px", "borderRadius": "10px",
+    "boxShadow": "0 2px 4px rgba(0,0,0,0.05)", "marginBottom": "20px"
 }
 
+# Componente do cabeçalho
 header = html.Div(
     style=header_style,
     children=[
@@ -563,9 +563,7 @@ def layout_teorema():
         children=[
             html.Div(
                 style=card_style,
-                children=[
-                    html.H2("Teorema de Bayes — Quadrado de Bayes (2 hipóteses)", style={'textAlign': 'center'})
-                ]
+                children=[html.H2("Teorema de Bayes — Quadrado de Bayes (2 hipóteses)", style={'textAlign': 'center'})]
             ),
             html.Div(
                 className="row",
@@ -852,7 +850,7 @@ def render_verossimilhanca_params(verossimilhanca):
 # ------------------------------------------------------------------------------
 def validate_param(value, min_val=None, max_val=None, min_exclusive=False, max_exclusive=False):
     """
-    Função auxiliar para validar um parâmetro.
+    Função auxiliar para validar um parâmetro e gerar a mensagem de erro apropriada.
     Retorna uma tupla: (é_valido: bool, mensagem_de_erro: str)
     """
     error_message = ""
@@ -990,7 +988,7 @@ def validate_input_x_and_m(x, m, verossimilhanca):
         if not is_valid: return f"{base_class} is-invalid", message
 
     return base_class, ""
-    
+
 # ------------------------------------------------------------------------------
 # 5.4: Callbacks de Sincronização (Página Teorema de Bayes)
 # ------------------------------------------------------------------------------
@@ -1114,14 +1112,14 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhanca):
                   if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Normal-Gama", verossimilhanca):
                       return invalid_fig, style
     
-    if verossimilhanca=="Geométrica": return verossimilhanca_geometrica_aproximada(x,n), style
-    elif verossimilhanca=="Bernoulli": return verossimilhanca_bernoulli_aproximada(x_bernoulli,n), style
-    elif verossimilhanca=="Normal (média desconhecida)": return verossimilhanca_normal_aproximada(x,conhecido,n), style
-    elif verossimilhanca=="Exponencial": return verossimilhanca_exponencial_aproximada(x,n), style
-    elif verossimilhanca=="Poisson": return verossimilhanca_poisson_aproximada(x,n), style
-    elif verossimilhanca=="Binomial negativa": return verossimilhanca_binomial_negativa_aproximada(x,m,n), style
-    elif verossimilhanca=="Gama (b desconhecido)": return verossimilhanca_gama_aproximada(x,conhecido,n), style
-    elif verossimilhanca=="Normal (média e precisão desconhecidas)": return verossimilhanca_normal_gama_aproximada(x,conhecido,n), style
+    if verossimilhancas=="Geométrica": return verossimilhanca_geometrica_aproximada(x,n), style
+    elif verossimilhancas=="Bernoulli": return verossimilhanca_bernoulli_aproximada(x_bernoulli,n), style
+    elif verossimilhancas=="Normal (média desconhecida)": return verossimilhanca_normal_aproximada(x,conhecido,n), style
+    elif verossimilhancas=="Exponencial": return verossimilhanca_exponencial_aproximada(x,n), style
+    elif verossimilhancas=="Poisson": return verossimilhanca_poisson_aproximada(x,n), style
+    elif verossimilhancas=="Binomial negativa": return verossimilhanca_binomial_negativa_aproximada(x,m,n), style
+    elif verossimilhancas=="Gama (b desconhecido)": return verossimilhanca_gama_aproximada(x,conhecido,n), style
+    elif verossimilhancas=="Normal (média e precisão desconhecidas)": return verossimilhanca_normal_gama_aproximada(x,conhecido,n), style
     else: return go.Figure(), {'display': 'none'}
 
 @app.callback(
