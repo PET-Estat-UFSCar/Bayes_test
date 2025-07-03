@@ -1,57 +1,81 @@
-/* /assets/style.css */
+/* Importa a fonte do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-/* Estilo base para os inputs para garantir consistência */
-.styled-input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    box-sizing: border-box; /* Garante que padding e borda não aumentem a largura total */
-    transition: border-color 0.3s; /* Animação suave na mudança de cor */
-}
-
-/* Estilo para o input quando o valor for inválido */
-.invalid-input {
-    border-color: red !important; /* Deixa a borda vermelha */
-    border-width: 2px !important;   /* Deixa a borda um pouco mais grossa para destacar */
-}
-
-/* Estilo para a mensagem de erro que aparece embaixo do input */
-.error-message p {
-    color: red;                 /* Deixa o texto da mensagem vermelho */
-    font-size: 0.9em;           /* Tamanho da fonte um pouco menor */
+/* Estilo geral do corpo da página */
+body {
+    font-family: 'Roboto', sans-serif;
     margin: 0;
-    padding: 0;
-    margin-top: -4px; /* Ajuste para aproximar a mensagem da caixa */
-    margin-bottom: 5px;
+    background-color: #F3F6FA;
 }
 
-/* Estilos gerais para os botões do seu app */
-.nav-button, .action-button {
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
+/* Estilo para os botões de navegação no cabeçalho */
 .nav-button {
-    background-color: #007bff;
+    background-color: white;
+    color: #80062b;
+    border: 2px solid #80062b;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .nav-button:hover {
-    background-color: #0056b3;
+    background-color: #80062b;
+    color: white;
 }
 
+/* Estilo para botões de ação */
 .action-button {
-    background-color: #28a745;
-    margin-top: 10px;
+    background-color: #80062b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
 }
 
 .action-button:hover {
-    background-color: #218838;
+    background-color: #0056b3;
+}
+
+/* Layout em colunas */
+.container {
+    padding: 20px;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.col {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Estilo para inputs e dropdowns */
+.styled-input, .Select-control, .Select-input, .Select-value {
+    width: calc(100% - 22px); /* Ajustado para padding + border */
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    margin-top: 5px;
+    margin-bottom: 5px; /* Reduzido para dar espaço à msg de erro */
+    font-size: 16px;
+    transition: border-color 0.3s ease; /* Adicionado para suavizar a mudança de cor */
+}
+
+/* NOVA CLASSE PARA MENSAGEM DE ERRO */
+.error-message {
+    color: red;
+    font-size: 12px;
+    min-height: 18px; /* Reserva espaço para evitar que o layout "pule" */
+    margin-bottom: 5px;
 }
