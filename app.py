@@ -1108,18 +1108,18 @@ def update_likelihood_graph(m, x, x_bernoulli, n, conhecido, verossimilhanca):
     
     if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Beta", verossimilhanca):
         if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Gama", verossimilhanca):
-             if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Normal", verossimilhanca):
-                  if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Normal-Gama", verossimilhanca):
-                      return invalid_fig, style
+            if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Normal", verossimilhanca):
+                if not validate_all_params(1, 1, 3, 1, m, x, x_bernoulli, n, conhecido, "Normal-Gama", verossimilhanca):
+                    return invalid_fig, style
     
-    if verossimilhancas=="Geométrica": return verossimilhanca_geometrica_aproximada(x,n), style
-    elif verossimilhancas=="Bernoulli": return verossimilhanca_bernoulli_aproximada(x_bernoulli,n), style
-    elif verossimilhancas=="Normal (média desconhecida)": return verossimilhanca_normal_aproximada(x,conhecido,n), style
-    elif verossimilhancas=="Exponencial": return verossimilhanca_exponencial_aproximada(x,n), style
-    elif verossimilhancas=="Poisson": return verossimilhanca_poisson_aproximada(x,n), style
-    elif verossimilhancas=="Binomial negativa": return verossimilhanca_binomial_negativa_aproximada(x,m,n), style
-    elif verossimilhancas=="Gama (b desconhecido)": return verossimilhanca_gama_aproximada(x,conhecido,n), style
-    elif verossimilhancas=="Normal (média e precisão desconhecidas)": return verossimilhanca_normal_gama_aproximada(x,conhecido,n), style
+    if verossimilhanca=="Geométrica": return verossimilhanca_geometrica_aproximada(x,n), style
+    elif verossimilhanca=="Bernoulli": return verossimilhanca_bernoulli_aproximada(x_bernoulli,n), style
+    elif verossimilhanca=="Normal (média desconhecida)": return verossimilhanca_normal_aproximada(x,conhecido,n), style
+    elif verossimilhanca=="Exponencial": return verossimilhanca_exponencial_aproximada(x,n), style
+    elif verossimilhanca=="Poisson": return verossimilhanca_poisson_aproximada(x,n), style
+    elif verossimilhanca=="Binomial negativa": return verossimilhanca_binomial_negativa_aproximada(x,m,n), style
+    elif verossimilhanca=="Gama (b desconhecido)": return verossimilhanca_gama_aproximada(x,conhecido,n), style
+    elif verossimilhanca=="Normal (média e precisão desconhecidas)": return verossimilhanca_normal_gama_aproximada(x,conhecido,n), style
     else: return go.Figure(), {'display': 'none'}
 
 @app.callback(
@@ -1387,7 +1387,7 @@ $X_1 ... X_n$ condicionalmente independentes e identicamente distribuídos $Norm
 #### Posteriori:
 $(\mu,\tau)|\mathbf{{X}} \sim Normal-Gama\left( {((b*a+n*x)/(b+n)):.3f}, {b+n}, {c+n/2},{(d +0.5*(n*conhecido + (b*n*(x-a)**2)/(b+n))):.3f} \right)$
 ''', mathjax=True)
-        
+    
 @app.callback(
     Output("botao", "children"),
     Input("botao", "n_clicks")
